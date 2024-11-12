@@ -1,0 +1,49 @@
+Hey gang!
+
+Here are generalized instructions to use this demo.
+
+First you'll need to set up your enviroment:
+
+For the backend you'll need to install the python packages:
+    - flask 
+    - flask_cors
+    - Flask-SQLAlchemy
+    -flask-mysql
+For the frontend:
+1. Install Node.js and npm
+    - If Node.js and npm are not already installed, you can install them from nodejs.org
+2. Navigate to the React app directory with cd client/react-demo. Use the command 'npm install' to download all frontend dependencies
+
+RUNNING THE DEMO
+The theory of the demo is that you'll be simulating a Client-Server relationship by having the database, backend, and frontend all run on different local ports.
+
+First, start your MySQL server that will host the database. I just do this using XAMPP, although you can use the command line if you prefer
+Next, start the backend. Run the python file in server.py
+Next, run the frontend. Go into the "react-demo" directory and use the command npm run dev. 
+    Note: I had to run npm run dev admin permissions using sudo npm run dev the FIRST time I built the frontend. 
+            I think this was simply to give npm permission to write to the node-modules folder. 
+            You may not need to do this, I think my local permissions are all messed up. 
+
+The console will display a URL that you can go to in order to view the frontend.
+
+USING REACT:
+The actual react app is created and run in /src/pages/_app.js
+index.js is the default route, and controls the "Home" page.
+We can create more pages for our app within the pages folder
+We can also create re-usable components. Components are modular and reusable chunks of JSX (Very similar to html) and Javascript logic
+These are typically placed in a folder that's a sibling of the pages folder, which are then imported into different pages to be reused.
+
+Typical file structure:
+/pages                --> Contains the pages of your app (automatically routed)
+  /index.js           --> The home page (root route)
+  /about.js           --> A simple "about" page
+  /posts/[id].js      --> Dynamic post page
+/components           --> Reusable UI components
+  /Button.js          --> A reusable button component
+  /Header.js          --> A reusable header component
+/styles               --> Global styles (CSS, Sass, etc.)
+  /globals.css        --> Global styles
+/public               --> Static files like images, fonts, etc.
+  /images             --> Store images here
+  /favicon.ico        --> Favicon for the app
+

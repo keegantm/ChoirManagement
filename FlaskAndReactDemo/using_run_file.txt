@@ -1,0 +1,10 @@
+Basic script to to run_demo.sh file, which drops the db, populates the db, runs the backend, and then runs the frontend
+NOTE: This is set up for my local env. I think you'll be able to run this if you change the file to have your local sql server's port
+
+- first I gave permissions to the .sh file with chmod +x run_demo.sh
+- then, I ran mySQL server. if I have issues with this, use  ps aux | grep "mysql" to see any sql processes. then use sudo kill {pid} and rerun
+- can run the file with ./run_demo.sh
+
+Debugging:
+- if a servers still up after closing, use ps aux | grep python and kill python processes
+- I needed to give it the SQL servers socket on my local dir. I used --socket=/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock

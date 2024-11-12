@@ -1,4 +1,6 @@
 import React, {useEffect, useState} from 'react'
+import NavBar from '../components/NavBar.js'
+
 
 function index() {
 
@@ -23,6 +25,7 @@ function index() {
 
   return (
     <div>
+      <NavBar></NavBar>
       {message}
     </div>
   )
