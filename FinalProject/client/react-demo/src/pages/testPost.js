@@ -6,27 +6,28 @@ function testPost() {
 
     const handleSubmit = async () => {
         try {
-            const response = fetch("http://localhost:8080/testPost", {
+            const response = await fetch("http://localhost:8080/testPost", {
                 method: "POST",
                 headers: {
-                    "Content-Type" : "application/json"
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     name: newName
                 })
-            })
-
+            });
+    
             if (!response.ok) {
                 throw new Error('Failed to post data');
             }
             
-            //const result = response.json()
-            //console.log("Response:", result);
+            const result = await response.json();  // Add this line to parse the response
+            console.log("Response:", result);      // Log the response if needed
         }
         catch (err) {
-            console.log(err)
+            console.log("Error:", err);            // Log the error if it occurs
         }
-    }
+    };
+    
 
     const handleInputChange = (event) => {
         const target = event.target

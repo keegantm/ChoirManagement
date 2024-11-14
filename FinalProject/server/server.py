@@ -20,6 +20,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/ChoirDa
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db.init_app(app)
 
+@app.before_request
+def log_request_info():
+    print("Request headers:", request.headers)
+
 '''
 Endpoint for the frontend's home page. 
 (Endpoint just defines an address where the 
@@ -47,8 +51,8 @@ Until we have authentication set up, just return True for everything
 def getUserPermissions():
     try:
 
-        permissions = {'canEditVoiceRoles': True, 
-                       'canEditBoardRoles': False}    
+        permissions = {'canEditMusicalRoles': True, 
+                       'canEditBoardRoles': True}    
 
         return jsonify(permissions)
 
@@ -63,21 +67,25 @@ Get all currently active members
 @app.route('/getActiveMembers', methods=['GET'])
 def getActiveMembers():
     try:
+        #print("GETTING ACTIVE MEMBERS")
         # Querying the users table
-        result = db.session.execute(text('SELECT memberId, first_name, last_name FROM Member WHERE is_active = True')).fetchall()
+        result = db.session.execute(text('SELECT member_id, first_name, last_name FROM Member WHERE is_active = True')).fetchall()
+        #print("Got result")
         members = [{'memberId': row[0], 'first_name': row[1], 'last_name' : row[2]} for row in result]
         
+        #print(members)
+
         # If no results found
         if not members:
+            print("ERROR, didnt find any active members")
             return '<h1>No data found.</h1>'
 
         # Return the result as JSON
         return jsonify(members)
     except Exception as e:
-        # e holds description of the error
-        error_text = "<p>The error:<br>" + str(e) + "</p>"
-        hed = '<h1>Something is broken.</h1>'
-        return hed + error_text
+        print("GET ACTIVE MEMBERS FAILED")
+        print(e)
+        return None
 
 
 '''
@@ -145,11 +153,15 @@ Steps:
 - Jsonify and return
 
 '''
-@app.route('/getRoleAssignmentsByType', methods=['GET', 'POST'])
+@app.route('/getRoleAssignmentsByType', methods=['POST'])
 def getRoleAssignmentsByType():
+    print("getRoleAssignmentsByType")
     try:
 
-        role_options = request.json.get(role_options)
+        print("GETTING ROLE ASSIGNMENTS OF TYPE:")
+        print(request)
+        role_options = request.json.get('role_types')
+        print(role_options)
 
         query = text('''
             SELECT Role.role_id, Role.role_type, Role.member_id, Member.first_name, Member.last_name
@@ -176,10 +188,9 @@ def getRoleAssignmentsByType():
         # Return the data as JSON
         return jsonify(role_assignments)
     except Exception as e:
-        # e holds description of the error
-        error_text = "<p>The error:<br>" + str(e) + "</p>"
-        hed = '<h1>Something is broken.</h1>'
-        return hed + error_text
+        print("ERROR IN GETTING ROLE ASSIGNMENTS")
+        print(e)
+        return None
 
 '''
 Given a role_id, and a role_type, update the role_type of 

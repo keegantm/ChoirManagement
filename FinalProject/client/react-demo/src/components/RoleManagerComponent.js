@@ -7,32 +7,49 @@ const RoleManagerComponent = (props) => {
     const [loadedRoles, setLoadedRoles] = useState([]);
     const [activeMembers, setActiveMembers] = useState([]);
 
-    // Fetch role assignments and active members when the component loads
-    useEffect(() => {
-        if (roleOptions && roleOptions.length > 0) {
-            // Fetch role assignments based on roleOptions
-            fetch('/getRoleAssignmentsByType', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ role_types: roleOptions }) // Pass role options as the filter
-            })
-            .then(response => response.json())
-            .then(data => setLoadedRoles(data))
-            .catch(error => console.error("Error fetching role assignments:", error));
-        }
 
-        // Fetch active members
-        fetch('/getActiveMembers')
-            .then(response => response.json())
-            .then(data => setActiveMembers(data))
-            .catch(error => console.error("Error fetching active members:", error));
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Fetch role assignments based on roleOptions
+                if (roleOptions && roleOptions.length > 0) {
+                    const roleResponse = await fetch('http://localhost:8080/getRoleAssignmentsByType', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ role_types: roleOptions }) // Pass role options as the filter
+                    });
+    
+                    if (!roleResponse.ok) {
+                        throw new Error('Failed to fetch role assignments');
+                    }
+    
+                    const roleData = await roleResponse.json();
+                    setLoadedRoles(roleData);
+                }
+    
+                // Fetch active members
+                const memberResponse = await fetch('http://localhost:8080/getActiveMembers');
+                if (!memberResponse.ok) {
+                    throw new Error('Failed to fetch active members');
+                }
+    
+                const memberData = await memberResponse.json();
+                setActiveMembers(memberData);
+                console.log(memberData);  // Log the fetched active members if needed
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+    
+        fetchData();
     }, [roleOptions]);
+    
 
     // Handle role change
     const handleRoleChange = (roleId, newRoleType) => {
-        fetch('/updateExistingRole', {
+        fetch('http://localhost:8080/updateExistingRole', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -50,7 +67,7 @@ const RoleManagerComponent = (props) => {
 
     // Handle role deletion
     const handleDeleteRole = (roleId) => {
-        fetch('/deleteRoleRow', { 
+        fetch('http://localhost:8080/deleteRoleRow', { 
             method: 'DELETE', 
             headers: {
                 'Content-Type': 'application/json'
@@ -65,7 +82,7 @@ const RoleManagerComponent = (props) => {
 
     // Handle adding a new role assignment
     const handleAddRole = (memberId, newRoleType) => {
-        fetch('/assignNewRole', {
+        fetch('http://localhost:8080/assignNewRole', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

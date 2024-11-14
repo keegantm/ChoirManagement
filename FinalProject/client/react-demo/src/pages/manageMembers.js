@@ -5,7 +5,7 @@ import RoleManagerComponent from '@/components/RoleManagerComponent.js';
 function manageMembers() {
 
     const [permissions, setPermissions] = useState({
-        canEditVoiceRoles: false,
+        canEditMusicalRoles: false,
         canEditBoardRoles: false,
     });
 
@@ -13,9 +13,10 @@ function manageMembers() {
 
     useEffect(() => {
         // Fetch the user's permissions from the backend
-        fetch('/getUserPermissions')
+        fetch('http://localhost:8080/getUserPermissions')
             .then(response => response.json())
-            .then(data => setPermissions(data));
+            .then(data => { console.log(data)
+                            setPermissions(data)});
     }, []);
 
 
@@ -39,13 +40,16 @@ function manageMembers() {
         let updatedRoleOptions = [];
 
         if (permissions.canEditBoardRoles) {
+            console.log("CAN edit board")
             updatedRoleOptions = [...updatedRoleOptions, ...boardOptions];
         }
 
-        if (permissions.canEditVoiceRoles) {
+        if (permissions.canEditMusicalRoles) {
+            console.log("CAN edit musical")
+
             updatedRoleOptions = [...updatedRoleOptions, ...musicalOptions];
         }
-
+        console.log(updatedRoleOptions)
         setRoleOptions(updatedRoleOptions);
 
     }, [permissions]);
@@ -97,4 +101,6 @@ function manageMembers() {
     );*/
 
     }
+
+    export default manageMembers
     
