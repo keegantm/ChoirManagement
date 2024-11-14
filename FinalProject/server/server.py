@@ -36,6 +36,113 @@ def return_home():
 
 
 '''
+Get User Permissions
+
+Will send permissions of the logged in user, which will then be 
+used to conditionally render the management tools that they have access to
+
+Until we have authentication set up, just return True for everything
+'''
+@app.route('/getUserPermissions', methods=['GET'])
+def getUserPermissions():
+    try:
+
+        permissions = {'canEditVoiceRoles': True, 
+                       'canEditBoardRoles': False}    
+
+        return jsonify(permissions)
+
+    except Exception as e:
+        print(str(e))
+
+'''
+Get all currently active members
+
+
+'''
+@app.route('/getActiveMembers', methods=['GET'])
+def getActiveMembers():
+    try:
+
+        return
+    except Exception as e:
+        print(str(e))
+
+
+'''
+Get all MUSICAL roles, which means the role_types can only be one of the following:
+    const roleOptions = [
+        'Accompanist', 
+        'Director', 
+        'BassSectionLeader', 
+        'TenorSectionLeader', 
+        'AltoSectionLeader', 
+        'SopranoSectionLeader'
+    ];
+'''
+@app.route('/getMusicalRoleAssignments', methods =['GET'])
+def getMusicalRoleAssignments():
+    try:
+
+        return
+    except Exception as e:
+        print(str(e))
+
+
+
+
+'''
+Given a role_id, and a role_type, update the role_type of 
+the existing row in the Role table
+
+If successful, return a json with the role_id and role_type
+'''
+@app.route('/updateExistingRole', methods=['POST', 'GET'])
+def updateExistingRole():
+    try:
+
+        return
+    except Exception as e:
+        print(str(e))
+
+'''
+Given a roleId, delete the row from the table
+
+'''
+@app.route('/deleteRoleRow', methods=['POST', 'GET'])
+def deleteRoleRow():
+    try:
+
+        return
+    except Exception as e:
+        print(str(e))
+
+'''
+Create a new Role row, given a role_type and a member_id
+
+CREATE TABLE Role (
+    role_id INT PRIMARY KEY AUTO_INCREMENT,
+    member_id INT NOT NULL,
+    role_type VARCHAR(50) NOT NULL,
+    salary_amount DECIMAL(10, 2) DEFAULT 0.00,
+    role_start_date DATE NOT NULL,
+    role_end_date DATE,
+    FOREIGN KEY (member_id) REFERENCES Member(member_id)
+
+
+AFTER you add the row, query the DB to inner join this new Role row with their Member row.
+Jsonify this, and return it
+);
+'''
+@app.route('/assignNewRole', methods=['POST', 'GET'])
+def assignNewRole():
+    try:
+
+        return
+    except Exception as e:
+        print(str(e))
+
+'''
 Return all active members, who joined on or after the given date
 
 USES:
@@ -46,7 +153,7 @@ The date will be accessible via:
 date = request.json.get('date') Expected format: 'YYYY-MM-DD'
 '''
 @app.route('/getActiveAfterDate', methods=['GET'])
-def getActiveMembers():
+def getActiveMembersAfterDate():
     try:
 
         return
@@ -129,54 +236,6 @@ USES:
 '''
 @app.route('/getRoleAssignments', methods=['GET'])
 def getRoleAssignments():
-    try:
-
-        return
-    except Exception as e:
-        print(str(e))
-
-'''
-Create a new Role row.
-Expect values in the json exactly as they appear in the schema
-
-CREATE TABLE Role (
-    role_id INT PRIMARY KEY AUTO_INCREMENT,
-    member_id INT NOT NULL,
-    role_type VARCHAR(50) NOT NULL,
-    salary_amount DECIMAL(10, 2) DEFAULT 0.00,
-    role_start_date DATE NOT NULL,
-    role_end_date DATE,
-    FOREIGN KEY (member_id) REFERENCES Member(member_id)
-);
-'''
-@app.route('/assignNewRole', methods=['POST'])
-def assignNewRole():
-    try:
-
-        return
-    except Exception as e:
-        print(str(e))
-
-'''
-Given a roleId, update its data with the input JSON
-Expect values in the json exactly as they appear in the schema
-
-
-'''
-@app.route('/updateExistingRole', methods=['POST'])
-def updateExistingRole():
-    try:
-
-        return
-    except Exception as e:
-        print(str(e))
-
-'''
-Given a roleId, delete the row from the table
-
-'''
-@app.route('/deleteRoleRow', methods=['POST'])
-def deleteRoleRow():
     try:
 
         return
