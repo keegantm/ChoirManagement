@@ -188,9 +188,8 @@ def getRoleAssignmentsByType():
         # Return the data as JSON
         return jsonify(role_assignments)
     except Exception as e:
-        print("ERROR IN GETTING ROLE ASSIGNMENTS")
-        print(e)
-        return None
+        print("ERROR", e)
+        return jsonify({"error": str(e)}), 400
 
 '''
 Given a role_id, and a role_type, update the role_type of 
@@ -200,23 +199,64 @@ If successful, return a json with the role_id and role_type
 '''
 @app.route('/updateExistingRole', methods=['POST', 'GET'])
 def updateExistingRole():
+    print("updating role assignment")
     try:
 
-        return
+        role_id = request.json.get('role_id')
+        role_type = request.json.get('role_type')
+
+        query = text('''
+            UPDATE Role
+            SET role_type = :role_type
+            WHERE role_id = :role_id
+        ''')
+
+        result = db.session.execute(query, {"role_id" : role_id, "role_type":role_type})
+        db.session.commit()
+
+        # Convert the result to a list of dictionaries
+        updated_role_info = {
+            "role_id" : role_id,
+            "role_type" : role_type
+        }
+        
+        # Return the data as JSON
+        return jsonify(updated_role_info)
     except Exception as e:
         print(str(e))
+        return jsonify({"error": str(e)}), 400
 
 '''
 Given a roleId, delete the row from the table
 
 '''
-@app.route('/deleteRoleRow', methods=['POST', 'GET'])
+@app.route('/deleteRoleRow', methods=['POST', 'DELETE'])
 def deleteRoleRow():
-    try:
+    print("deleting role assignment")
 
-        return
+    try:
+        role_id = request.json.get('role_id')
+
+        query = text('''
+            DELETE FROM Role
+            WHERE role_id = :role_id
+        ''')
+
+        result = db.session.execute(query, {"role_id" : role_id})
+        db.session.commit()
+
+        # Convert the result to a list of dictionaries
+        updated_role_info = {
+            "role_id" : role_id,
+        }
+        
+        # Return the data as JSON
+        return jsonify(updated_role_info)
+
     except Exception as e:
         print(str(e))
+        return jsonify({"error": str(e)}), 400
+
 
 '''
 Create a new Role row, given a role_type and a member_id
@@ -237,11 +277,32 @@ Jsonify this, and return it
 '''
 @app.route('/assignNewRole', methods=['POST', 'GET'])
 def assignNewRole():
-    try:
+    print("assigning new role")
 
-        return
+    try:
+        member_id = request.json.get('member_id')
+        role_type = request.json.get('role_type')
+        role_start_date = request.json.get('role_start_date')
+
+
+        query = text('''
+            INSERT INTO Role (member_id, role_type, role_start_date)
+            VALUES (:member_id, :role_type, :role_start_date)
+        ''')
+
+        db.session.execute(query, {
+            "member_id": member_id,
+            "role_type": role_type,
+            "role_start_date": role_start_date
+        })
+        db.session.commit()
+
+        # Return the data as JSON
+        return jsonify({'status' : 'successful add row'})
+
     except Exception as e:
         print(str(e))
+        return jsonify({"error": str(e)}), 400
 
 '''
 Return all active members, who joined on or after the given date

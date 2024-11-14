@@ -49,51 +49,124 @@ const RoleManagerComponent = (props) => {
 
     // Handle role change
     const handleRoleChange = (roleId, newRoleType) => {
-        fetch('http://localhost:8080/updateExistingRole', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ role_id: roleId, role_type: newRoleType })
-        })
-        .then(response => response.json())
-        .then(() => {
-            setLoadedRoles(loadedRoles.map(role =>
-                role.role_id === roleId ? { ...role, role_type: newRoleType } : role
-            ));
-        })
-        .catch(error => console.error("Error updating role:", error));
-    };
+        const fetchData = async () => {
+            try{
+
+                const handleRoleChangeResponse = await fetch('http://localhost:8080/updateExistingRole', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ role_id: roleId, role_type: newRoleType})
+                })
+
+                if (!handleRoleChangeResponse.ok) {
+                    throw new Error('Failed to handle role change');
+                }
+
+                const changedData = await handleRoleChangeResponse.json();
+                console.log(changedData);
+                setLoadedRoles(loadedRoles.map(role =>
+                    role.role_id === roleId ? { ...role, role_type: newRoleType } : role
+                ));
+                
+
+                /*
+                fetch('http://localhost:8080/updateExistingRole', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ role_id: roleId, role_type: newRoleType })
+                })
+                .then(response => response.json())
+                .then(() => {
+                    setLoadedRoles(loadedRoles.map(role =>
+                        role.role_id === roleId ? { ...role, role_type: newRoleType } : role
+                    ));
+                })
+                .catch(error => console.error("Error updating role:", error));
+                */
+                
+            }
+            catch (error) {
+                console.error("Error fetching data in handleRoleChange::", error);
+            }
+        }
+        fetchData();
+    }
+            
+
 
     // Handle role deletion
-    const handleDeleteRole = (roleId) => {
-        fetch('http://localhost:8080/deleteRoleRow', { 
-            method: 'DELETE', 
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ role_id: roleId })
-        })
-        .then(() => {
+    const handleDeleteRole = async (roleId) => {
+
+        try{
+            const handleDeleted = await fetch('http://localhost:8080/deleteRoleRow', { 
+                method: 'DELETE', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ role_id: roleId })
+            })
+
+            if (!handleDeleted.ok) {
+                throw new Error('Failed to handle deletion');
+            }
+
+            const changedData = await handleDeleted.json();
+            console.log(changedData);
             setLoadedRoles(loadedRoles.filter(role => role.role_id !== roleId));
-        })
-        .catch(error => console.error("Error deleting role:", error));
+ 
+        }
+        catch (error) {
+            console.error("Error fetching data in handleDeleteRole:", error);
+        }
+
     };
 
     // Handle adding a new role assignment
-    const handleAddRole = (memberId, newRoleType) => {
-        fetch('http://localhost:8080/assignNewRole', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ member_id: memberId, role_type: newRoleType })
-        })
-        .then(response => response.json())
-        .then(newRole => {
-            setLoadedRoles([...loadedRoles, newRole]);
-        })
-        .catch(error => console.error("Error adding role:", error));
+    const handleAddRole = async (memberId, newRoleType) => {
+        try{
+            let current_date = new Date()
+            let formattedDate = current_date.toISOString().split('T')[0]
+            console.log(formattedDate)
+
+            const handleAddRole = await fetch('http://localhost:8080/assignNewRole', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ member_id: memberId, role_type: newRoleType, role_start_date: formattedDate })
+            })
+
+            if (!handleAddRole.ok) {
+                throw new Error('Failed to handle adding role');
+            }
+            
+            //join of member row and role row
+            const result = await handleAddRole.json();
+            console.log(result)
+
+            //update the display role table
+            const roleResponse = await fetch('http://localhost:8080/getRoleAssignmentsByType', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ role_types: roleOptions }) // Pass role options as the filter
+            });
+
+            if (!roleResponse.ok) {
+                throw new Error('Failed to fetch role assignments');
+            }
+
+            const roleData = await roleResponse.json();
+            setLoadedRoles(roleData);
+    }
+        catch (error){
+            console.error("Error adding a role assignment:", error);
+    }
     };
 
     // Only render if roleOptions are defined and have items
@@ -103,7 +176,7 @@ const RoleManagerComponent = (props) => {
 
     return (
         <div>
-            <h3>Manage Musical Roles</h3>
+            <h3>Manage Roles</h3>
 
             <table>
                 <thead>
@@ -123,7 +196,7 @@ const RoleManagerComponent = (props) => {
                                     onChange={(e) => handleRoleChange(role.role_id, e.target.value)}
                                 >
                                     {roleOptions.map(option => (
-                                        <option key={option} value={option}>{option}</option>
+                                        <option key={option+role.id} value={option}>{option}</option>
                                     ))}
                                 </select>
                             </td>
