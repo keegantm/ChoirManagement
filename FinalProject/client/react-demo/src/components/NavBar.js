@@ -10,6 +10,8 @@ const NavBar = () => {
             <br></br>
             <Link href="/testPost">Test Post</Link>
             <br></br>
+            <Link href="/manageMembers">Test Post</Link>
+            <br></br>
         </nav>
     )
 }

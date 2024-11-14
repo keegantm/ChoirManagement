@@ -70,6 +70,9 @@ def getActiveMembers():
 
 
 '''
+NOTE: PRIORITIZE IMPLEMENTING getRoleAssignmentsByType instead of this
+
+
 Get all MUSICAL roles, which means the role_types can only be one of the following:
     const roleOptions = [
         'Accompanist', 
@@ -89,11 +92,14 @@ def getMusicalRoleAssignments():
         print(str(e))
 
 '''
+NOTE: PRIORITIZE IMPLEMENTING getRoleAssignmentsByType instead of this
+
 Get all BOARD roles, which means the role_types can only be one of the following:
     const roleOptions = [
         'BoardMember', 
         'Treasurer', 
         'President'
+        
     ];
 '''
 @app.route('/getBoardRoleAssignments', methods =['GET'])
@@ -104,6 +110,37 @@ def getBoardRoleAssignments():
     except Exception as e:
         print(str(e))
 
+'''
+Generalized getter for role assignments
+Will receive a list of types that are valid : 
+
+Options:
+    roleOptions =[
+        'BoardMember', 
+        'Treasurer', 
+        'President'
+        'Accompanist', 
+        'Director', 
+        'BassSectionLeader', 
+        'TenorSectionLeader', 
+        'AltoSectionLeader', 
+        'SopranoSectionLeader']
+
+    Will acess via request.json.get(roleOptions)
+
+Steps:
+- Get all role rows of with matching role_type 
+- Inner join by Member id to add the corresponding Member rows
+- Jsonify and return
+
+'''
+@app.route('/getRoleAssignmentsByType', methods=['GET', 'POST'])
+def getRoleAssignmentsByType():
+    try:
+
+        return
+    except Exception as e:
+        print(str(e))
 
 '''
 Given a role_id, and a role_type, update the role_type of 

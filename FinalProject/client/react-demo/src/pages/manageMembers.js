@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react'
 import NavBar from '../components/NavBar.js'
+import RoleManagerComponent from '@/components/RoleManagerComponent.js';
 
 function manageMembers() {
 
@@ -8,12 +9,46 @@ function manageMembers() {
         canEditBoardRoles: false,
     });
 
+    const [roleOptions, setRoleOptions] = useState([]);
+
     useEffect(() => {
         // Fetch the user's permissions from the backend
         fetch('/getUserPermissions')
             .then(response => response.json())
             .then(data => setPermissions(data));
     }, []);
+
+
+    useEffect(() => {
+        // Update roleOptions based on permissions
+        const musicalOptions = [
+            'Accompanist', 
+            'Director', 
+            'BassSectionLeader', 
+            'TenorSectionLeader', 
+            'AltoSectionLeader', 
+            'SopranoSectionLeader'
+        ];
+
+        const boardOptions = [
+            'BoardMember', 
+            'Treasurer', 
+            'President'
+        ];
+
+        let updatedRoleOptions = [];
+
+        if (permissions.canEditBoardRoles) {
+            updatedRoleOptions = [...updatedRoleOptions, ...boardOptions];
+        }
+
+        if (permissions.canEditVoiceRoles) {
+            updatedRoleOptions = [...updatedRoleOptions, ...musicalOptions];
+        }
+
+        setRoleOptions(updatedRoleOptions);
+
+    }, [permissions]);
 
     //First, retrieve the user's permissions
 
@@ -26,14 +61,24 @@ function manageMembers() {
     }
 
     */
-
     return (
         <div>
             <NavBar />
 
             <p>Manage Member Roles:</p>
 
-            {/* Conditionally render based on permissions */}
+            <RoleManagerComponent roleOptions={roleOptions}  />
+            
+        </div>
+        
+    );
+
+    /*return (
+        <div>
+            <NavBar />
+
+            <p>Manage Member Roles:</p>
+
             {permissions.canEditMusicalRoles && (
                 <div>
                     <h3>Edit Musical Roles</h3>
@@ -49,6 +94,7 @@ function manageMembers() {
             )}
         </div>
         
-    );
+    );*/
 
     }
+    
