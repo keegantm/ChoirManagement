@@ -1,36 +1,34 @@
 import React, { useEffect, useState } from 'react';
 
-const MusicalRolesComponent = (props) => {
+const RoleManagerComponent = (props) => {
+    const { roleOptions } = props;
 
-    const roleOptions = props.roleOptions;
-    const permissions = props.permissions;
-    // Define role options
-    /*
-    const roleOptions = [
-        'Accompanist', 
-        'Director', 
-        'BassSectionLeader', 
-        'TenorSectionLeader', 
-        'AltoSectionLeader', 
-        'SopranoSectionLeader'
-    ];
-    */
     // State for role assignments and active members
     const [loadedRoles, setLoadedRoles] = useState([]);
     const [activeMembers, setActiveMembers] = useState([]);
 
     // Fetch role assignments and active members when the component loads
     useEffect(() => {
-        // Fetch role assignments
-        fetch('/getMusicalRoleAssignments')
+        if (roleOptions && roleOptions.length > 0) {
+            // Fetch role assignments based on roleOptions
+            fetch('/getRoleAssignmentsByType', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ role_types: roleOptions }) // Pass role options as the filter
+            })
             .then(response => response.json())
-            .then(data => setLoadedRoles(data));
+            .then(data => setLoadedRoles(data))
+            .catch(error => console.error("Error fetching role assignments:", error));
+        }
 
         // Fetch active members
         fetch('/getActiveMembers')
             .then(response => response.json())
-            .then(data => setActiveMembers(data));
-    }, []);
+            .then(data => setActiveMembers(data))
+            .catch(error => console.error("Error fetching active members:", error));
+    }, [roleOptions]);
 
     // Handle role change
     const handleRoleChange = (roleId, newRoleType) => {
@@ -42,11 +40,12 @@ const MusicalRolesComponent = (props) => {
             body: JSON.stringify({ role_id: roleId, role_type: newRoleType })
         })
         .then(response => response.json())
-        .then(updatedRole => {  //update this row in the loadedRoles, so change is accurate though changes
+        .then(() => {
             setLoadedRoles(loadedRoles.map(role =>
                 role.role_id === roleId ? { ...role, role_type: newRoleType } : role
             ));
-        });
+        })
+        .catch(error => console.error("Error updating role:", error));
     };
 
     // Handle role deletion
@@ -56,11 +55,12 @@ const MusicalRolesComponent = (props) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ role_id: roleId }) // Send roleId in the JSON body
+            body: JSON.stringify({ role_id: roleId })
         })
         .then(() => {
             setLoadedRoles(loadedRoles.filter(role => role.role_id !== roleId));
-        });
+        })
+        .catch(error => console.error("Error deleting role:", error));
     };
 
     // Handle adding a new role assignment
@@ -75,8 +75,14 @@ const MusicalRolesComponent = (props) => {
         .then(response => response.json())
         .then(newRole => {
             setLoadedRoles([...loadedRoles, newRole]);
-        });
+        })
+        .catch(error => console.error("Error adding role:", error));
     };
+
+    // Only render if roleOptions are defined and have items
+    if (!roleOptions || roleOptions.length === 0) {
+        return null;
+    }
 
     return (
         <div>
@@ -140,4 +146,4 @@ const MusicalRolesComponent = (props) => {
     );
 };
 
-export default MusicalRolesComponent;
+export default RoleManagerComponent;
