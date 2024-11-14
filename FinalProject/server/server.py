@@ -63,10 +63,21 @@ Get all currently active members
 @app.route('/getActiveMembers', methods=['GET'])
 def getActiveMembers():
     try:
+        # Querying the users table
+        result = db.session.execute(text('SELECT memberId, first_name, last_name FROM Member WHERE is_active = True')).fetchall()
+        members = [{'memberId': row[0], 'first_name': row[1], 'last_name' : row[2]} for row in result]
+        
+        # If no results found
+        if not members:
+            return '<h1>No data found.</h1>'
 
-        return
+        # Return the result as JSON
+        return jsonify(members)
     except Exception as e:
-        print(str(e))
+        # e holds description of the error
+        error_text = "<p>The error:<br>" + str(e) + "</p>"
+        hed = '<h1>Something is broken.</h1>'
+        return hed + error_text
 
 
 '''
@@ -138,9 +149,37 @@ Steps:
 def getRoleAssignmentsByType():
     try:
 
-        return
+        role_options = request.json.get(role_options)
+
+        query = text('''
+            SELECT Role.role_id, Role.role_type, Role.member_id, Member.first_name, Member.last_name
+            FROM Role
+            INNER JOIN Member ON Role.member_id = Member.member_id
+            WHERE Role.role_type IN :role_types
+        ''')
+
+        
+        result = db.session.execute(query, {'role_types': tuple(role_options)}).fetchall()
+        
+        # Convert the result to a list of dictionaries
+        role_assignments = [
+            {
+                "role_id": row.role_id,
+                "role_type": row.role_type,
+                "member_id": row.member_id,
+                "first_name": row.first_name,
+                "last_name": row.last_name
+            }
+            for row in result
+        ]
+        
+        # Return the data as JSON
+        return jsonify(role_assignments)
     except Exception as e:
-        print(str(e))
+        # e holds description of the error
+        error_text = "<p>The error:<br>" + str(e) + "</p>"
+        hed = '<h1>Something is broken.</h1>'
+        return hed + error_text
 
 '''
 Given a role_id, and a role_type, update the role_type of 
