@@ -12,3 +12,18 @@ VALUES
     ('Daniel', 'Martinez', 'daniel.martinez@example.com', '2022-11-09', TRUE, '909 Willow Way', 'Unit 10', 'Brunswick', 'ME', '04011'),
     ('Olivia', 'Lee', 'olivia.lee@example.com', '2020-08-27', TRUE, '789 Fir St', NULL, 'York', 'ME', '03909'),
     ('James', 'Miller', 'james.miller@example.com', '2023-04-10', FALSE, '147 Palm Dr', 'Bldg 3', 'Waterville', 'ME', '04901');
+
+
+/* Sample Role Data */
+INSERT INTO Role (member_id, role_type, salary_amount, role_start_date, role_end_date)
+VALUES
+    (1, 'President', 5000.00, '2023-01-20', NULL),
+    (1, 'TenorSectionLeader', 2000.00, '2023-01-20', NULL),
+    (2, 'Treasurer', 4000.00, '2022-08-01', NULL),
+    (4, 'BassSectionLeader', 3000.00, '2020-04-01', '2023-04-01'),
+    (5, 'SopranoSectionLeader', 2500.00, '2023-06-01', NULL),
+    (7, 'Accompanist', 3500.00, '2021-03-01', NULL),
+    (8, 'BoardMember', 1500.00, '2022-12-01', NULL),
+    (9, 'Director', 6000.00, '2021-01-01', NULL),
+    (9, 'BoardMember', 1500.00, '2020-09-01', '2021-09-01'),
+    (10, 'AltoSectionLeader', 2500.00, '2023-04-15', NULL);    
