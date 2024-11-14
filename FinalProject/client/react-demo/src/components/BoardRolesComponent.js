@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react';
 
-const MusicalRolesComponent = () => {
+const BoardRolesComponent = () => {
     // Define role options
     const roleOptions = [
-        'Accompanist', 
-        'Director', 
-        'BassSectionLeader', 
-        'TenorSectionLeader', 
-        'AltoSectionLeader', 
-        'SopranoSectionLeader'
+        'BoardMember', 
+        'Treasurer', 
+        'President'
     ];
 
     // State for role assignments and active members
@@ -18,7 +15,7 @@ const MusicalRolesComponent = () => {
     // Fetch role assignments and active members when the component loads
     useEffect(() => {
         // Fetch role assignments
-        fetch('/getMusicalRoleAssignments')
+        fetch('/getBoardRoleAssignments')
             .then(response => response.json())
             .then(data => setLoadedRoles(data));
 
@@ -76,7 +73,7 @@ const MusicalRolesComponent = () => {
 
     return (
         <div>
-            <h3>Manage Musical Roles</h3>
+            <h3>Manage Board Roles</h3>
 
             <table>
                 <thead>
@@ -136,4 +133,4 @@ const MusicalRolesComponent = () => {
     );
 };
 
-export default MusicalRolesComponent;
+export default BoardRolesComponent;
