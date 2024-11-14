@@ -88,7 +88,21 @@ def getMusicalRoleAssignments():
     except Exception as e:
         print(str(e))
 
+'''
+Get all BOARD roles, which means the role_types can only be one of the following:
+    const roleOptions = [
+        'BoardMember', 
+        'Treasurer', 
+        'President'
+    ];
+'''
+@app.route('/getBoardRoleAssignments', methods =['GET'])
+def getBoardRoleAssignments():
+    try:
 
+        return
+    except Exception as e:
+        print(str(e))
 
 
 '''
