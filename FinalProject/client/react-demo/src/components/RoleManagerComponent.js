@@ -171,7 +171,11 @@ const RoleManagerComponent = (props) => {
 
     // Only render if roleOptions are defined and have items
     if (!roleOptions || roleOptions.length === 0) {
-        return null;
+        return <div>Loading Roles...</div>;
+    }
+
+    if (!activeMembers || activeMembers.length === 0) {
+        return <div>Loading Members</div>
     }
 
     return (
@@ -213,7 +217,7 @@ const RoleManagerComponent = (props) => {
                 <label>Member: </label>
                 <select id="newMemberSelect">
                     {activeMembers.map(member => (
-                        <option key={member.member_id} value={member.member_id}>
+                        <option key={member.member_id} value={member.member_id || "default_id"}>
                             {member.first_name} {member.last_name}
                         </option>
                     ))}
@@ -227,8 +231,11 @@ const RoleManagerComponent = (props) => {
                 </select>
                 
                 <button onClick={() => {
-                    const memberId = document.getElementById('newMemberSelect').value;
+                    
+                    console.log(document.getElementById('newMemberSelect').value)
+                    const memberId = document.getElementById('newMemberSelect').value
                     const roleType = document.getElementById('newRoleSelect').value;
+                    console.log(memberId)
                     handleAddRole(memberId, roleType);
                 }}>Add Role</button>
             </div>

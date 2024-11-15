@@ -71,7 +71,7 @@ def getActiveMembers():
         # Querying the users table
         result = db.session.execute(text('SELECT member_id, first_name, last_name FROM Member WHERE is_active = True')).fetchall()
         #print("Got result")
-        members = [{'memberId': row[0], 'first_name': row[1], 'last_name' : row[2]} for row in result]
+        members = [{'member_id': row[0], 'first_name': row[1], 'last_name' : row[2]} for row in result]
         
         #print(members)
 
@@ -280,6 +280,7 @@ def assignNewRole():
     print("assigning new role")
 
     try:
+        #problem: this is a name, instead of an int
         member_id = request.json.get('member_id')
         role_type = request.json.get('role_type')
         role_start_date = request.json.get('role_start_date')
