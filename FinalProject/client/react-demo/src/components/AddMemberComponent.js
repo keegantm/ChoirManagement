@@ -1,7 +1,10 @@
 import {useState} from 'react'
 
 
+
 const AddMemberComponent = () => {
+
+
     const [newMember, setNewMember] = useState({
         first_name: '',
         last_name: '',
@@ -12,7 +15,24 @@ const AddMemberComponent = () => {
         city: '',
         state: '',
         postal_code: ''
+    });
+
+    const resetForm = () => {
+        setNewMember({
+            first_name: '',
+            last_name: '',
+            email: '',
+            join_date: new Date().toISOString().split('T')[0],
+            address_line_1: '',
+            address_line_2: '',
+            city: '',
+            state: '',
+            postal_code: ''
         });
+    }
+
+    const [message, setMessage] = useState(null);
+
 
     const handleInputChange = (e) => {
         //name is name of the input field
@@ -34,25 +54,18 @@ const AddMemberComponent = () => {
                 body: JSON.stringify(newMember),
             });
 
+            const result = await response.json();
+            
+            //notify the user if the Member was added successfully
             if (!response.ok) {
-                throw new Error('Failed to add new member');
+                setMessage({ type: 'error', text: result.message || 'An error occurred' });
+                console.log(result.message)
+            } else {
+                setMessage({ type: 'success', text: result.message });
+                console.log(result.message)
+                resetForm();
             }
 
-            const result = await response.json();
-            console.log('Member added:', result);
-
-            // Clear the form after submission
-            setNewMember({
-                first_name: '',
-                last_name: '',
-                email: '',
-                join_date: new Date().toISOString().split('T')[0],
-                address_line_1: '',
-                address_line_2: '',
-                city: '',
-                state: '',
-                postal_code: ''
-            });
         } catch (error) {
             console.error('Error adding new member:', error);
         }
@@ -61,6 +74,11 @@ const AddMemberComponent = () => {
     return (
         <div>
             <h3>Add a New Member</h3>
+            {message && (
+                <div className={`alert ${message.type}`}>
+                    {message.text}
+                </div>
+            )}
             <div>
                 <label>First Name:</label>
                 <input
@@ -78,6 +96,7 @@ const AddMemberComponent = () => {
                     onChange={handleInputChange}
                 />
 
+                <br></br>
                 <label>Email:</label>
                 <input
                     type="email"
@@ -101,6 +120,8 @@ const AddMemberComponent = () => {
                     value={newMember.address_line_2}
                     onChange={handleInputChange}
                 />
+
+                <br></br>
 
                 <label>City:</label>
                 <input
@@ -127,6 +148,8 @@ const AddMemberComponent = () => {
                     value={newMember.postal_code}
                     onChange={handleInputChange}
                 />
+
+                <br></br>
 
                 <button onClick={handleSubmit}>Add Member</button>
             </div>

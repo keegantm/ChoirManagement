@@ -9,6 +9,7 @@ import datetime
 from flask import request
 from pytz import timezone
 from sqlalchemy import Enum
+from sqlalchemy.exc import IntegrityError
 
 
 x = datetime.datetime.now()
@@ -157,7 +158,8 @@ def getUserPermissions():
     try:
 
         permissions = {'canEditMusicalRoles': True, 
-                       'canEditBoardRoles': True}    
+                       'canEditBoardRoles': True,
+                       'canAddMembers' : True}    
 
         return jsonify(permissions)
 
@@ -672,9 +674,40 @@ Expect key names exactly as they appear in the Schema
 @app.route('/addMember', methods=['POST'])
 def addMember():
     try:
-        return
+        data = request.json # Extract data from the incoming JSON request
+
+        required_fields = ["first_name", "last_name", "email", "join_date", "address_line_1", "city", "state", "postal_code"]
+        missing_fields = [field for field in required_fields if not data.get(field) or data.get(field).strip() == ""]
+
+        if missing_fields:
+            raise ValueError(f"The following fields are required and cannot be empty: {', '.join(missing_fields)}")
+
+        new_member = Member(
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name'),
+            email=data.get('email'),
+            join_date=data.get('join_date'),
+            address_line_1=data.get('address_line_1'),
+            address_line_2=data.get('address_line_2', ''), # Set default empty string for optional address field
+            city=data.get('city'),
+            state=data.get('state'),
+            postal_code=data.get('postal_code')
+        )
+        db.session.add(new_member) # Add new member to the database snessio
+        db.session.commit() # Commit changes to the database
+
+        return jsonify( {"message": "Member added successfully"})
+    #for non-unique email
+    except IntegrityError:
+        print("Email Error")
+        return jsonify({'message': 'A member with this email already exists'}), 400
+    except ValueError as e:
+        print("Empty Field Error")
+        return jsonify({'message': str(e)}), 400
     except Exception as e:
         print(str(e))
+        return jsonify({"error": str(e)}), 400
+
 
 '''
 Method to query the db, and just get all Members in a JSON 
