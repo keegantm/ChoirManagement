@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react'
 import NavBar from '../components/NavBar.js'
 import RoleManagerComponent from '@/components/RoleManagerComponent.js';
+import VoicePartComponent from '@/components/VoicePartComponent.js';
 
 function manageMembers() {
 
@@ -73,6 +74,10 @@ function manageMembers() {
 
             <RoleManagerComponent roleOptions={roleOptions}  />
             
+            {permissions.canEditMusicalRoles && (
+                <VoicePartComponent></VoicePartComponent>
+
+            )}
         </div>
         
     );

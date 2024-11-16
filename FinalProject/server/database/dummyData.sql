@@ -27,3 +27,14 @@ VALUES
     (9, 'Director', 6000.00, '2021-01-01', NULL),
     (9, 'BoardMember', 1500.00, '2020-09-01', '2021-09-01'),
     (10, 'AltoSectionLeader', 2500.00, '2023-04-15', NULL);    
+
+INSERT INTO VoiceParts (member_id, voice_part)
+VALUES
+    (1, 'Tenor'),
+    (2, 'Alto'),
+    (4, 'Bass'),
+    (5, 'Soprano'),
+    (7, 'Alto'),
+    (8, 'Tenor'),
+    (9, 'Bass'),
+    (10, 'Soprano');
