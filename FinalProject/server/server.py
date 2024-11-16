@@ -365,6 +365,42 @@ def deleteVoicePart():
         print(str(e))
 
 '''
+Given a voice_part_id, and a voice_part, update the voice_part of 
+the existing row in the VoiceParts table
+
+If successful, return a json with the voice_part_id and voice_part
+'''
+@app.route('/updateExistingVoicePart', methods=['POST', 'GET'])
+def updateExistingVoicePart():
+    print("updating voice part assignment")
+    try:
+
+        voice_part_id = request.json.get('voice_part_id')
+        voice_part = request.json.get('voice_part')
+
+        query = text('''
+            UPDATE VoiceParts
+            SET voice_part = :voice_part
+            WHERE voice_part_id = :voice_part_id
+        ''')
+
+        result = db.session.execute(query, {"voice_part_id" : voice_part_id, "voice_part":voice_part})
+        db.session.commit()
+
+        # Convert the result to a list of dictionaries
+        updated_part_info = {
+            "voice_part_id" : voice_part_id,
+            "voice_part" : voice_part
+        }
+        
+        # Return the data as JSON
+        return jsonify(updated_part_info)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": str(e)}), 400
+
+
+'''
 Insert new attendance records into the Attendance table.
 Expect values in the json exactly as they appear in the schema
 

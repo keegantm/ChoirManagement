@@ -200,7 +200,7 @@ const RoleManagerComponent = (props) => {
                                     onChange={(e) => handleRoleChange(role.role_id, e.target.value)}
                                 >
                                     {roleOptions.map(option => (
-                                        <option key={option+role.id} value={option}>{option}</option>
+                                        <option key={option+role.role_id} value={option}>{option}</option>
                                     ))}
                                 </select>
                             </td>
