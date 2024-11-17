@@ -556,6 +556,71 @@ def updateExistingVoicePart():
 
 
 '''
+Method to retrieve potentially inactive members of the choir
+
+NOTE: Currently does not account for excused absenses
+
+If keep AbsenceReason table, can 
+Left Join it into this. Then, add AND (is_excused = FALSE OR is_excused IS NULL)
+to the where clause
+'''
+@app.route('/retrievePotentiallyInactiveMembers', methods=['POST', 'GET'])
+def retrievePotentiallyInactiveMembers():
+    try:
+        
+        #if there are under n practices total, then no one should be flagged
+        practice_count_query = text("SELECT COUNT(DISTINCT practice_id) AS practice_count FROM PracticeAttendance")
+        result = db.session.execute(practice_count_query).fetchone()
+
+        if result['practice_count'] < 5:
+            return (jsonify([]))
+
+        query = text('''
+        SELECT DISTINCT Member.member_id, Member.first_name, Member.last_name
+        FROM PracticeAttendance
+        JOIN Member ON Member.member_id = PracticeAttendance.member_id
+        WHERE PracticeAttendance.present = FALSE
+        AND PracticeAttendance.practice_id IN (
+            SELECT practice_id
+            FROM (
+                SELECT practice_id
+                FROM PracticeAttendance
+                ORDER BY practice_date DESC
+                LIMIT 5
+            )
+        );
+        ''')
+
+        absent_members = db.session.execute(query).fetchall()
+        return jsonify([dict(row) for row in absent_members])
+    
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": str(e)}), 400
+
+'''
+Method to set a member as inactive
+
+'''
+@app.route('/setInactiveMember', methods=['POST'])
+def setInactiveMember():
+    try:
+        member_id = request.json.get('member_id')
+        member = db.session.query(Member).filter_by(member_id=member_id).first()
+        
+        if not member:
+            return jsonify({"message": "Member not found"}), 404
+        
+        member.is_active = False
+        db.session.commit()
+
+        return (jsonify({'member_id' : member_id}))
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": str(e)}), 400        
+    
+
+'''
 Insert new attendance records into the Attendance table.
 Expect values in the json exactly as they appear in the schema
 

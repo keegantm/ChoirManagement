@@ -38,3 +38,59 @@ VALUES
     (8, 'Tenor'),
     (9, 'Bass'),
     (10, 'Soprano');
+
+
+-- Practice 1: Most recent practice (2024-11-12)
+INSERT INTO PracticeAttendance (member_id, practice_date, present, absence_reason_id, specific_reason, record_time, notified_in_advance, notes)
+VALUES
+    (1, '2024-11-12', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
+    (2, '2024-11-12', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (4, '2024-11-12', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (5, '2024-11-12', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
+    (7, '2024-11-12', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (8, '2024-11-12', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
+    (9, '2024-11-12', TRUE, NULL, NULL, NOW(), FALSE, 'Present');
+
+-- Practice 2 (2024-11-10)
+INSERT INTO PracticeAttendance (member_id, practice_date, present, absence_reason_id, specific_reason, record_time, notified_in_advance, notes)
+VALUES
+    (1, '2024-11-10', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (2, '2024-11-10', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
+    (4, '2024-11-10', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (5, '2024-11-10', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (7, '2024-11-10', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
+    (8, '2024-11-10', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (9, '2024-11-10', TRUE, NULL, NULL, NOW(), FALSE, 'Present');
+
+-- Practice 3 (2024-11-08)
+INSERT INTO PracticeAttendance (member_id, practice_date, present, absence_reason_id, specific_reason, record_time, notified_in_advance, notes)
+VALUES
+    (1, '2024-11-08', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (2, '2024-11-08', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
+    (4, '2024-11-08', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (5, '2024-11-08', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
+    (7, '2024-11-08', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (8, '2024-11-08', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (9, '2024-11-08', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice');
+
+-- Practice 4 (2024-11-05)
+INSERT INTO PracticeAttendance (member_id, practice_date, present, absence_reason_id, specific_reason, record_time, notified_in_advance, notes)
+VALUES
+    (1, '2024-11-05', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (2, '2024-11-05', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
+    (4, '2024-11-05', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (5, '2024-11-05', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (7, '2024-11-05', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
+    (8, '2024-11-05', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (9, '2024-11-05', TRUE, NULL, NULL, NOW(), FALSE, 'Present');
+
+-- Practice 5 (2024-11-02)
+INSERT INTO PracticeAttendance (member_id, practice_date, present, absence_reason_id, specific_reason, record_time, notified_in_advance, notes)
+VALUES
+    (1, '2024-11-02', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
+    (2, '2024-11-02', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (4, '2024-11-02', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (5, '2024-11-02', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (7, '2024-11-02', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
+    (8, '2024-11-02', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
+    (9, '2024-11-02', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice');
