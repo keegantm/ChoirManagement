@@ -159,7 +159,9 @@ def getUserPermissions():
 
         permissions = {'canEditMusicalRoles': True, 
                        'canEditBoardRoles': True,
-                       'canAddMembers' : True}    
+                       'canAddMembers' : True,
+                        'canChangeActiveStatus': True
+        }
 
         return jsonify(permissions)
 
@@ -564,19 +566,21 @@ If keep AbsenceReason table, can
 Left Join it into this. Then, add AND (is_excused = FALSE OR is_excused IS NULL)
 to the where clause
 '''
-@app.route('/retrievePotentiallyInactiveMembers', methods=['POST', 'GET'])
-def retrievePotentiallyInactiveMembers():
+def retrievePotentiallyInactiveMemers():
     try:
-        
         #if there are under n practices total, then no one should be flagged
         practice_count_query = text("SELECT COUNT(DISTINCT practice_id) AS practice_count FROM PracticeAttendance")
         result = db.session.execute(practice_count_query).fetchone()
 
-        if result['practice_count'] < 5:
+        #get the num practices
+        if result[0] < 5:
             return (jsonify([]))
 
         query = text('''
-        SELECT DISTINCT Member.member_id, Member.first_name, Member.last_name
+        SELECT DISTINCT 
+            Member.member_id AS member_id, 
+            Member.first_name AS first_name, 
+            Member.last_name AS last_name
         FROM PracticeAttendance
         JOIN Member ON Member.member_id = PracticeAttendance.member_id
         WHERE PracticeAttendance.present = FALSE
@@ -587,16 +591,89 @@ def retrievePotentiallyInactiveMembers():
                 FROM PracticeAttendance
                 ORDER BY practice_date DESC
                 LIMIT 5
-            )
-        );
+            ) AS recent_practices
+        )
+        GROUP BY Member.member_id
+        HAVING COUNT(DISTINCT PracticeAttendance.practice_id) = 5
+
         ''')
 
         absent_members = db.session.execute(query).fetchall()
-        return jsonify([dict(row) for row in absent_members])
+
+        # Explicitly construct JSON response
+        absent_members_list = [
+            {
+                "member_id": row.member_id,
+                "first_name": row.first_name,
+                "last_name": row.last_name,
+            }
+            for row in absent_members
+        ]
+
+        return jsonify(absent_members_list)
     
     except Exception as e:
         print(str(e))
         return jsonify({"error": str(e)}), 400
+    
+@app.route('/retrievePotentiallyInactiveMembers', methods=['POST', 'GET'])
+def retrievePotentiallyInactiveMembers():
+    try:
+        #get number of practices
+        practice_count_query = text("""
+            SELECT COUNT(DISTINCT practice_date) AS practice_count
+            FROM PracticeAttendance
+        """)
+        result = db.session.execute(practice_count_query).fetchone()
+
+        #if there are under 5 practices, return empty list
+        if result[0] < 5:
+            print("Less than 5 distinct practice dates, returning empty list.")
+            return jsonify([])
+
+        #get the five most recent practices
+        recent_practice_dates_query = text("""
+            SELECT DISTINCT practice_date
+            FROM PracticeAttendance
+            ORDER BY practice_date DESC
+            LIMIT 5
+        """)
+        recent_practice_dates = db.session.execute(recent_practice_dates_query).fetchall()
+        recent_practice_dates = [row[0] for row in recent_practice_dates]  # Extract dates
+
+        members_absent_query = text("""
+            SELECT DISTINCT Member.member_id, Member.first_name, Member.last_name
+            FROM Member
+            LEFT JOIN PracticeAttendance 
+                ON Member.member_id = PracticeAttendance.member_id
+                AND PracticeAttendance.practice_date IN :recent_dates
+            WHERE PracticeAttendance.present = FALSE OR PracticeAttendance.practice_date IS NULL
+            GROUP BY Member.member_id, Member.first_name, Member.last_name
+            HAVING COUNT(DISTINCT PracticeAttendance.practice_date) = 5
+        """)
+        members_absent = db.session.execute(members_absent_query, {'recent_dates': tuple(recent_practice_dates)}).fetchall()
+
+        #no members found, return empty list
+        if not members_absent:
+            print("No members found who missed all of the recent practices, returning empty list.")
+            return jsonify([])
+
+        absent_members_list = [
+            {
+                "member_id": row.member_id,
+                "first_name": row.first_name,
+                "last_name": row.last_name,
+            }
+            for row in members_absent
+        ]
+
+        return jsonify(absent_members_list)
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Debugging line
+        return jsonify({"error": str(e)}), 400
+
+
 
 '''
 Method to set a member as inactive

@@ -24,7 +24,7 @@ const ManagePotentiallyInactiveMembers = () => {
             }
         }
         fetchData();
-    })
+    }, [])
 
     const handleSetInactive = async (member_id) => {
         try {
@@ -75,3 +75,5 @@ const ManagePotentiallyInactiveMembers = () => {
         </div>
     )
 }
+
+export default ManagePotentiallyInactiveMembers;

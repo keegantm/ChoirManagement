@@ -10,6 +10,7 @@ function manageMembers() {
         canEditMusicalRoles: false,
         canEditBoardRoles: false,
         canAddMembers: false,
+        canChangeActiveStatus: false
     });
 
     const [roleOptions, setRoleOptions] = useState([]);
@@ -83,6 +84,7 @@ function manageMembers() {
             {permissions.canAddMembers && (
                 <AddMemberComponent></AddMemberComponent>
             )}
+
         </div>
         
     );

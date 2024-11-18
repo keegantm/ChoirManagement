@@ -94,3 +94,22 @@ VALUES
     (7, '2024-11-02', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice'),
     (8, '2024-11-02', TRUE, NULL, NULL, NOW(), FALSE, 'Present'),
     (9, '2024-11-02', FALSE, NULL, 'No reason provided', NOW(), FALSE, 'Missed practice');
+
+INSERT INTO Member (first_name, last_name, email, join_date, is_active, address_line_1, city, state, postal_code)
+VALUES
+    ('Tom', 'Holland', 'tom.holland@example.com', '2023-06-10', TRUE, '111 Main St', 'Portland', 'ME', '04101'),
+    ('Mary', 'Johnson', 'mary.johnson@example.com', '2023-08-15', TRUE, '222 Maple Dr', 'Bangor', 'ME', '04401');
+
+INSERT INTO PracticeAttendance (member_id, practice_date, present, record_time)
+VALUES
+    (11, '2024-11-02', FALSE, NOW()),   -- Tom Holland missed the first practice
+    (11, '2024-11-05', FALSE, NOW()),   -- Tom missed the second practice
+    (11, '2024-11-08', FALSE, NOW()),   -- Tom missed the third practice
+    (11, '2024-11-10', FALSE, NOW()),   -- Tom missed the fourth practice
+    (11, '2024-11-12', FALSE, NOW()),   -- Tom missed the fifth practice
+
+    (12, '2024-11-02', FALSE, NOW()),   -- Mary Johnson missed the first practice
+    (12, '2024-11-05', FALSE, NOW()),   -- Mary missed the second practice
+    (12, '2024-11-08', FALSE, NOW()),   -- Mary missed the third practice
+    (12, '2024-11-10', FALSE, NOW()),   -- Mary missed the fourth practice
+    (12, '2024-11-12', FALSE, NOW());   -- Mary missed the fifth practice
