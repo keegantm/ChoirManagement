@@ -17,6 +17,9 @@ CREATE TABLE Member (
     postal_code VARCHAR(5) NOT NULL
 );
 
+
+
+
 /* AbsenceReason Table */
 CREATE TABLE AbsenceReason (
     absence_reason_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -114,3 +117,12 @@ VALUES
     ('Vacation', 'Absent due to planned vacation', FALSE),
     ('Weather', 'Absent due to severe weather conditions', TRUE),
     ('Unknown', 'Absent without any specific reason provided', FALSE);
+
+/* added by milad */
+CREATE TABLE User (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,      -- Unique identifier for each user
+    username VARCHAR(50) UNIQUE NOT NULL,        -- Unique username for authentication
+    password_hash VARCHAR(255) NOT NULL,         -- Hashed password for security
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp for account creation
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- Timestamp for updates
+);
