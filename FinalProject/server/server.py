@@ -7,6 +7,10 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import text
 import datetime
 from flask import request
+from pytz import timezone
+from sqlalchemy import Enum
+from sqlalchemy.exc import IntegrityError
+
 
 x = datetime.datetime.now()
 
@@ -19,6 +23,108 @@ db = SQLAlchemy()
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/ChoirDatabase'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db.init_app(app)
+
+# Define a database model class for the 'Member' table
+class Member(db.Model):
+    __tablename__ = 'Member'
+    member_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    first_name = db.Column(db.String(50), nullable=False)
+    last_name = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)  
+    join_date = db.Column(db.Date, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    address_line_1 = db.Column(db.String(30), nullable=False)  
+    address_line_2 = db.Column(db.String(30))  
+    city = db.Column(db.String(100), nullable=False)
+    state = db.Column(db.String(2), nullable=False)
+    postal_code = db.Column(db.String(5), nullable=False)
+
+
+# Define a database model class for the 'MembershipHistory' table
+class MembershipHistory(db.Model):
+    __tablename__ = 'MembershipHistory'
+    history_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    member_id = db.Column(db.Integer, db.ForeignKey('Member.member_id'), nullable=False)
+    end_date = db.Column(db.Date, nullable=True)
+    cancellation_reason_id = db.Column(db.Integer, db.ForeignKey('CancellationReason.cancellation_reason_id'), nullable=False)  
+    specific_reason = db.Column(db.Text, nullable=True)
+    exit_feedback = db.Column(db.Text, nullable=True)
+    is_eligible_for_return = db.Column(db.Boolean, default=True)
+    notes = db.Column(db.Text, nullable=True)
+
+# Define a database model class for the 'AbsenceReaso' table
+class AbsenceReason(db.Model):
+    __tablename__ = 'AbsenceReason'
+    absence_reason_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    reason_category = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    is_excused = db.Column(db.Boolean, default=False)
+    
+# Define a database model class for the 'VoicParts' table
+class VoiceParts(db.Model):
+    __tablename__ = 'VoiceParts'
+    voice_part_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    member_id = db.Column(db.Integer, db.ForeignKey('Member.member_id'), nullable=False)
+    voice_part = db.Column(
+        Enum('Soprano', 'Alto', 'Tenor', 'Bass', name='voice_part_enum'),
+        nullable=False
+    )
+
+# Define a database model class for the 'CancellationReason' table
+class CancellationReason(db.Model):
+    __tablename__ = 'CancellationReason'
+    cancellation_reason_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    description = db.Column(db.Text, nullable=False)
+
+# Define a database model class for the 'Notifications' table
+class NotificationLog(db.Model):
+    __tablename__ = 'NotificationLog'
+    notification_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    section_leader = db.Column(db.Integer, db.ForeignKey('Member.member_id'), nullable=False)
+    section_member = db.Column(db.Integer, db.ForeignKey('Member.member_id'), nullable=False)
+    notification_time = db.Column(db.DateTime, nullable=False)
+    message = db.Column(db.Text, nullable=False)
+
+# Define a database model class for the 'Role' table
+class Role(db.Model):
+    __tablename__ = 'Role'
+    role_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    member_id = db.Column(db.Integer, db.ForeignKey('Member.member_id'), nullable=False)
+    role_type = db.Column(db.String(50), nullable=False)
+    salary_amount = db.Column(db.Float, default=0.00)
+    role_start_date = db.Column(db.Date, nullable=False)
+    role_end_date = db.Column(db.Date)
+
+# Define a database model class for the 'Attendance' table
+class Attendance(db.Model):
+    __tablename__ = 'PracticeAttendance'
+    practice_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    member_id = db.Column(db.Integer, db.ForeignKey('Member.member_id'), nullable=False)
+    practice_date = db.Column(db.Date, nullable=False)
+    present = db.Column(db.Boolean, nullable=False)
+    absence_reason_id = db.Column(db.Integer, db.ForeignKey('AbsenceReason.absence_reason_id'), nullable=True)  
+    specific_reason = db.Column(db.String(255), nullable=True)
+    record_time = db.Column(db.DateTime, default=lambda: datetime.datetime.now(timezone('EST')), nullable=False)
+    notified_in_advance = db.Column(db.Boolean, default=False)
+    notes = db.Column(db.String(255), nullable=True)
+
+# Define a database model class for the 'Payment' table
+class Payment(db.Model):
+    __tablename__ = 'Payment'
+    payment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    member_id = db.Column(db.Integer, db.ForeignKey('Member.member_id'), nullable=False)
+    payment_date = db.Column(db.DateTime, default=lambda: datetime.datetime.now(timezone('EST')), nullable=False)
+    payment_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    payment_method = db.Column(db.String(50))
+
+
+# Define a database model class for the 'Budget' table
+class Budget(db.Model):
+    __tablename__ = 'Budget'
+    budget_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    budget_date_set = db.Column(db.Date, nullable=False)
+    budget_amount = db.Column(db.Numeric(12, 2), nullable=False)
+
 
 @app.before_request
 def log_request_info():
@@ -52,7 +158,10 @@ def getUserPermissions():
     try:
 
         permissions = {'canEditMusicalRoles': True, 
-                       'canEditBoardRoles': True}    
+                       'canEditBoardRoles': True,
+                       'canAddMembers' : True,
+                        'canChangeActiveStatus': True
+        }
 
         return jsonify(permissions)
 
@@ -333,21 +442,51 @@ USES:
 @app.route('/getActiveVoiceParts', methods=['GET'])
 def getActiveVoiceParts():
     try:
+        results = db.session.query(VoiceParts, Member).join(Member).filter(Member.is_active == True).all()
+        data = []
+        for voice_part, member in results:
+            data.append({
+                "voice_part_id": voice_part.voice_part_id,
+                "member_id": voice_part.member_id,
+                "voice_part": voice_part.voice_part,
+                "first_name": member.first_name,
+                "last_name": member.last_name,
+                "email": member.email,
+                "join_date": member.join_date.isoformat(),  # Convert date to string
+                "address_line_1": member.address_line_1,
+                "address_line_2": member.address_line_2,
+                "city": member.city,
+                "state": member.state,
+                "postal_code": member.postal_code
+            })
+        
+        return jsonify(data), 200
 
-        return
     except Exception as e:
         print(str(e))
+        return jsonify({"error": str(e)}), 400
+
 
 '''
-Insert a new voice part row
+Endpoint for adding a new voice part row
+
 '''
-@app.route('/insertVoicePart', methods=['POST'])
-def insertVoicePart():
+@app.route('/addVoicePart', methods=['POST'])
+def add_voice_part():
     try:
+        data = request.json
+        print(data)
+        new_voice_part = VoiceParts( 
+            member_id=data.get('member_id'), # Get member ID for association
+            voice_part=data.get('voice_part') # Set the voice part
+        )
 
-        return
+        db.session.add(new_voice_part) # Add new voice part record
+
+        db.session.commit() # Commit changes to the database
+        return jsonify({"message": "Voice part added successfully"})
     except Exception as e:
-        print(str(e))
+        return jsonify({"error": str(e)}), 500 # Handle errors 
 
 '''
 Remove a voice part row, given its id
@@ -356,13 +495,31 @@ The Id will be accessible via:
 voice_part_id = request.json.get('voice_part_id')
 
 '''
-@app.route('/deleteVoicePart', methods=['POST'])
+@app.route('/deleteVoicePart', methods=['POST', 'DELETE'])
 def deleteVoicePart():
-    try:
+    print("deleting voice part assignment")
 
-        return
+    try:
+        voice_part_id = request.json.get('voice_part_id')
+
+        query = text('''
+            DELETE FROM VoiceParts
+            WHERE voice_part_id = :voice_part_id
+        ''')
+
+        result = db.session.execute(query, {"voice_part_id" : voice_part_id})
+        db.session.commit()
+
+        updated_role_info = {
+            "voice_part_id" : voice_part_id,
+        }
+        
+        # Return the data as JSON
+        return jsonify(updated_role_info)
+
     except Exception as e:
         print(str(e))
+        return jsonify({"error": str(e)}), 400
 
 '''
 Given a voice_part_id, and a voice_part, update the voice_part of 
@@ -399,6 +556,98 @@ def updateExistingVoicePart():
         print(str(e))
         return jsonify({"error": str(e)}), 400
 
+
+'''
+Method to retrieve potentially inactive members of the choir
+
+NOTE: Currently does not account for excused absenses
+
+If keep AbsenceReason table, can 
+Left Join it into this. Then, add AND (is_excused = FALSE OR is_excused IS NULL)
+to the where clause
+'''
+@app.route('/retrievePotentiallyInactiveMembers', methods=['POST', 'GET'])
+def retrievePotentiallyInactiveMembers():
+    try:
+        #get number of practices
+        practice_count_query = text("""
+            SELECT COUNT(DISTINCT practice_date) AS practice_count
+            FROM PracticeAttendance
+        """)
+        result = db.session.execute(practice_count_query).fetchone()
+
+        #if there are under 5 practices, return empty list
+        if result[0] < 5:
+            print("Less than 5 distinct practice dates, returning empty list.")
+            return jsonify([])
+
+        #get the five most recent practices
+        recent_practice_dates_query = text("""
+            SELECT DISTINCT practice_date
+            FROM PracticeAttendance
+            ORDER BY practice_date DESC
+            LIMIT 5
+        """)
+        recent_practice_dates = db.session.execute(recent_practice_dates_query).fetchall()
+        recent_practice_dates = [row[0] for row in recent_practice_dates]  # Extract dates
+
+        members_absent_query = text("""
+            SELECT DISTINCT Member.member_id, Member.first_name, Member.last_name
+            FROM Member
+            LEFT JOIN PracticeAttendance 
+                ON Member.member_id = PracticeAttendance.member_id
+                AND PracticeAttendance.practice_date IN :recent_dates
+            WHERE ((PracticeAttendance.present = FALSE OR PracticeAttendance.practice_date IS NULL)
+            AND (Member.is_active = True))
+            GROUP BY Member.member_id, Member.first_name, Member.last_name
+            HAVING COUNT(DISTINCT PracticeAttendance.practice_date) = 5
+        """)
+        members_absent = db.session.execute(members_absent_query, {'recent_dates': tuple(recent_practice_dates)}).fetchall()
+
+        #no members found, return empty list
+        if not members_absent:
+            print("No members found who missed all of the recent practices, returning empty list.")
+            return jsonify([])
+
+        absent_members_list = [
+            {
+                "member_id": row.member_id,
+                "first_name": row.first_name,
+                "last_name": row.last_name,
+            }
+            for row in members_absent
+        ]
+
+        return jsonify(absent_members_list)
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Debugging line
+        return jsonify({"error": str(e)}), 400
+
+
+
+'''
+Method to set a member as inactive
+
+'''
+@app.route('/setInactiveMember', methods=['POST'])
+def setInactiveMember():
+    try:
+        member_id = request.json.get('member_id')
+        print(member_id)
+        member = db.session.query(Member).filter_by(member_id=member_id).first()
+
+        if not member:
+            return jsonify({"message": "Member not found"}), 404
+        
+        member.is_active = False
+        db.session.commit()
+
+        return (jsonify({'member_id' : member_id}))
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": str(e)}), 400        
+    
 
 '''
 Insert new attendance records into the Attendance table.
@@ -519,9 +768,40 @@ Expect key names exactly as they appear in the Schema
 @app.route('/addMember', methods=['POST'])
 def addMember():
     try:
-        return
+        data = request.json # Extract data from the incoming JSON request
+
+        required_fields = ["first_name", "last_name", "email", "join_date", "address_line_1", "city", "state", "postal_code"]
+        missing_fields = [field for field in required_fields if not data.get(field) or data.get(field).strip() == ""]
+
+        if missing_fields:
+            raise ValueError(f"The following fields are required and cannot be empty: {', '.join(missing_fields)}")
+
+        new_member = Member(
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name'),
+            email=data.get('email'),
+            join_date=data.get('join_date'),
+            address_line_1=data.get('address_line_1'),
+            address_line_2=data.get('address_line_2', ''), # Set default empty string for optional address field
+            city=data.get('city'),
+            state=data.get('state'),
+            postal_code=data.get('postal_code')
+        )
+        db.session.add(new_member) # Add new member to the database snessio
+        db.session.commit() # Commit changes to the database
+
+        return jsonify( {"message": "Member added successfully"})
+    #for non-unique email
+    except IntegrityError:
+        print("Email Error")
+        return jsonify({'message': 'A member with this email already exists'}), 400
+    except ValueError as e:
+        print("Empty Field Error")
+        return jsonify({'message': str(e)}), 400
     except Exception as e:
         print(str(e))
+        return jsonify({"error": str(e)}), 400
+
 
 '''
 Method to query the db, and just get all Members in a JSON 

@@ -1,12 +1,16 @@
 import React, {useEffect, useState} from 'react'
 import NavBar from '../components/NavBar.js'
 import RoleManagerComponent from '@/components/RoleManagerComponent.js';
+import VoicePartComponent from '@/components/VoicePartComponent.js';
+import AddMemberComponent from '@/components/AddMemberComponent.js';
 
 function manageMembers() {
 
     const [permissions, setPermissions] = useState({
         canEditMusicalRoles: false,
         canEditBoardRoles: false,
+        canAddMembers: false,
+        canChangeActiveStatus: false
     });
 
     const [roleOptions, setRoleOptions] = useState([]);
@@ -69,36 +73,21 @@ function manageMembers() {
         <div>
             <NavBar />
 
-            <p>Manage Member Roles:</p>
+            <h2>Manage Member Roles:</h2>
 
             <RoleManagerComponent roleOptions={roleOptions}  />
             
+            {permissions.canEditMusicalRoles && (
+                <VoicePartComponent></VoicePartComponent>
+            )}
+
+            {permissions.canAddMembers && (
+                <AddMemberComponent></AddMemberComponent>
+            )}
+
         </div>
         
     );
-
-    /*return (
-        <div>
-            <NavBar />
-
-            <p>Manage Member Roles:</p>
-
-            {permissions.canEditMusicalRoles && (
-                <div>
-                    <h3>Edit Musical Roles</h3>
-                    <MusicalRolesComponent />
-                </div>
-            )}
-
-            {permissions.canEditBoardRoles && (
-                <div>
-                    <h3>Edit Board Roles</h3>
-                    <BoardRolesComponent />
-                </div>
-            )}
-        </div>
-        
-    );*/
 
     }
 

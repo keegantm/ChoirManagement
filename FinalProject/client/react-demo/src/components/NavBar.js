@@ -12,6 +12,8 @@ const NavBar = () => {
             <br></br>
             <Link href="/manageMembers">Member Management</Link>
             <br></br>
+            <Link href="/attendance">Attendance</Link>
+            <br></br>
         </nav>
     )
 }

@@ -20,6 +20,7 @@ const VoicePartComponent = () => {
                 const voiceResponse = await fetch('http://localhost:8080/getActiveVoiceParts')
 
                 if (!voiceResponse.ok) {
+                    console.log(voiceResponse)
                     throw new Error('Failed to fetch voice assignments');
                 }
 
@@ -110,7 +111,7 @@ const VoicePartComponent = () => {
     const handleAddVoicePart = async (memberId, newVoicePart) => {
         try{
 
-            const handleAddVoicePart = await fetch('http://localhost:8080/insertVoicePart', {
+            const handleAddVoicePart = await fetch('http://localhost:8080/addVoicePart', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -172,7 +173,7 @@ const VoicePartComponent = () => {
                                     onChange={(e) => handleVoicePartChange(part.voice_part_id, e.target.value)}
                                 >
                                     {voiceOptions.map(option => (
-                                        <option key={option+voice.voice_part_id} value={option}>{option}</option>
+                                        <option key={option+part.voice_part_id} value={option}>{option}</option>
                                     ))}
                                 </select>
                             </td>
@@ -184,10 +185,10 @@ const VoicePartComponent = () => {
                 </tbody>
             </table>
 
-            <h3>Add a New Role Assignment</h3>
+            <h3>Add a Voice Part Assignment</h3>
             <div>
                 <label>Member: </label>
-                <select id="newMemberSelect">
+                <select id="voicePartMemberSelect">
                     {activeMembers.map(member => (
                         <option key={member.member_id} value={member.member_id || "default_id"}>
                             {member.first_name} {member.last_name}
@@ -197,14 +198,14 @@ const VoicePartComponent = () => {
 
                 <label>Voice Part: </label>
                 <select id="voicePartSelect">
-                    {voicePart.map(option => (
+                    {voiceOptions.map(option => (
                         <option key={option} value={option}>{option}</option>
                     ))}
                 </select>
                 
                 <button onClick={() => {
                     
-                    const memberId = document.getElementById('newMemberSelect').value
+                    const memberId = document.getElementById('voicePartMemberSelect').value
                     const voiceSelection = document.getElementById('voicePartSelect').value;
                     handleAddVoicePart(memberId, voiceSelection);
                 }}>Add Role</button>
