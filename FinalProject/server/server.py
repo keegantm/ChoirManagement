@@ -566,56 +566,6 @@ If keep AbsenceReason table, can
 Left Join it into this. Then, add AND (is_excused = FALSE OR is_excused IS NULL)
 to the where clause
 '''
-def retrievePotentiallyInactiveMemers():
-    try:
-        #if there are under n practices total, then no one should be flagged
-        practice_count_query = text("SELECT COUNT(DISTINCT practice_id) AS practice_count FROM PracticeAttendance")
-        result = db.session.execute(practice_count_query).fetchone()
-
-        #get the num practices
-        if result[0] < 5:
-            return (jsonify([]))
-
-        query = text('''
-        SELECT DISTINCT 
-            Member.member_id AS member_id, 
-            Member.first_name AS first_name, 
-            Member.last_name AS last_name
-        FROM PracticeAttendance
-        JOIN Member ON Member.member_id = PracticeAttendance.member_id
-        WHERE PracticeAttendance.present = FALSE
-        AND PracticeAttendance.practice_id IN (
-            SELECT practice_id
-            FROM (
-                SELECT practice_id
-                FROM PracticeAttendance
-                ORDER BY practice_date DESC
-                LIMIT 5
-            ) AS recent_practices
-        )
-        GROUP BY Member.member_id
-        HAVING COUNT(DISTINCT PracticeAttendance.practice_id) = 5
-
-        ''')
-
-        absent_members = db.session.execute(query).fetchall()
-
-        # Explicitly construct JSON response
-        absent_members_list = [
-            {
-                "member_id": row.member_id,
-                "first_name": row.first_name,
-                "last_name": row.last_name,
-            }
-            for row in absent_members
-        ]
-
-        return jsonify(absent_members_list)
-    
-    except Exception as e:
-        print(str(e))
-        return jsonify({"error": str(e)}), 400
-    
 @app.route('/retrievePotentiallyInactiveMembers', methods=['POST', 'GET'])
 def retrievePotentiallyInactiveMembers():
     try:
@@ -647,7 +597,8 @@ def retrievePotentiallyInactiveMembers():
             LEFT JOIN PracticeAttendance 
                 ON Member.member_id = PracticeAttendance.member_id
                 AND PracticeAttendance.practice_date IN :recent_dates
-            WHERE PracticeAttendance.present = FALSE OR PracticeAttendance.practice_date IS NULL
+            WHERE ((PracticeAttendance.present = FALSE OR PracticeAttendance.practice_date IS NULL)
+            AND (Member.is_active = True))
             GROUP BY Member.member_id, Member.first_name, Member.last_name
             HAVING COUNT(DISTINCT PracticeAttendance.practice_date) = 5
         """)
@@ -683,8 +634,9 @@ Method to set a member as inactive
 def setInactiveMember():
     try:
         member_id = request.json.get('member_id')
+        print(member_id)
         member = db.session.query(Member).filter_by(member_id=member_id).first()
-        
+
         if not member:
             return jsonify({"message": "Member not found"}), 404
         

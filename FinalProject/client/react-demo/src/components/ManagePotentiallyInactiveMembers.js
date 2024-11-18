@@ -36,12 +36,16 @@ const ManagePotentiallyInactiveMembers = () => {
                 body: JSON.stringify({member_id:member_id})
             });
 
+
             if (!setInactive.ok) {
                 throw new Error('Failed to set the member as inactive');
             }
+            
+            const changedData = await setInactive.json();
+            console.log(changedData)
+            console.log("Displayed members:", displayedMembers);
 
-            setLoadedVoiceParts(displayedMembers.filter(member => member.member_id !== member_id));
-
+            setDisplayedMembers(displayedMembers.filter(member => member.member_id != changedData.member_id));
         } catch (error) {
             console.error("Error setting a member as inactive");
         }
