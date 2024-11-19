@@ -113,3 +113,41 @@ VALUES
     (12, '2024-11-08', FALSE, NOW()),   -- Mary missed the third practice
     (12, '2024-11-10', FALSE, NOW()),   -- Mary missed the fourth practice
     (12, '2024-11-12', FALSE, NOW());   -- Mary missed the fifth practice
+
+INSERT INTO Budget (budget_date_set, budget_amount)
+VALUES
+    ('2024-01-15', 1500.00),
+    ('2024-04-10', 2000.00),
+    ('2024-07-20', 1750.00),
+    ('2024-10-05', 2100.00),
+    ('2024-11-01', 2500.00);
+
+-- Insert dummy data into Payment table
+
+-- Payments before 2024-11-01 (total of 1000)
+INSERT INTO Payment (member_id, payment_date, payment_amount, payment_method)
+VALUES
+    (1, '2024-10-15 14:00:00', 150.00, 'Credit Card'),
+    (2, '2024-10-20 09:30:00', 120.00, 'Cash'),
+    (3, '2024-10-22 16:45:00', 200.00, 'Bank Transfer'),
+    (4, '2024-10-25 11:00:00', 80.00, 'Credit Card'),
+    (5, '2024-10-30 18:15:00', 100.00, 'Cash'),
+    (6, '2024-10-28 20:00:00', 180.00, 'Debit Card'),
+    (7, '2024-10-17 13:00:00', 170.00, 'Bank Transfer'),
+    (8, '2024-10-12 08:30:00', 50.00, 'Cash'),
+    (9, '2024-10-14 15:30:00', 50.00, 'Credit Card'),
+    (10, '2024-10-29 10:00:00', 40.00, 'Debit Card');
+
+-- Payments after 2024-11-01 (total of 1800)
+INSERT INTO Payment (member_id, payment_date, payment_amount, payment_method)
+VALUES
+    (1, '2024-11-05 14:00:00', 300.00, 'Credit Card'),
+    (2, '2024-11-06 09:30:00', 200.00, 'Cash'),
+    (3, '2024-11-07 16:45:00', 150.00, 'Bank Transfer'),
+    (4, '2024-11-08 11:00:00', 100.00, 'Credit Card'),
+    (5, '2024-11-09 18:15:00', 250.00, 'Cash'),
+    (6, '2024-11-10 20:00:00', 80.00, 'Debit Card'),
+    (7, '2024-11-11 13:00:00', 100.00, 'Bank Transfer'),
+    (8, '2024-11-12 08:30:00', 70.00, 'Cash'),
+    (9, '2024-11-13 15:30:00', 120.00, 'Credit Card'),
+    (10, '2024-11-14 10:00:00', 100.00, 'Debit Card');

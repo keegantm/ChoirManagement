@@ -706,17 +706,24 @@ def getSalariedMembers():
 
 
 '''
-Return the budget for the current financial year. Financial year is defined as between JUNE and JULY
-
-Ex: June 1st 2023 - July 31st 2024 is a financial year
-May be able to just return the most recently set budget.
+Return the most recent budget
 '''
 @app.route('/getCurrentBudget', methods=['GET'])
-def getCurrentBudget():
+def get_current_budget():
     try:
-        return
+        recent_budget = Budget.query.order_by(Budget.budget_date_set.desc()).first()
+
+        if recent_budget:
+            return jsonify({
+                'budget_amount': str(recent_budget.budget_amount),
+                'budget_date_set': recent_budget.budget_date_set.strftime('%Y-%m-%d')
+            })
+        else:
+            return jsonify({"error": "No budget found"}), 404
+
     except Exception as e:
-        print(str(e))
+        return jsonify({"error": str(e)}), 500
+
     
 '''
 Create a new budget row, from the input date and amount
@@ -741,12 +748,35 @@ date_1 = request.json.get('date_1') YYYY-MM-DD Format
 date_2 = request.json.get('date_2')
 
 '''
-@app.route('/getPayments', methods=['GET'])
+@app.route('/getPayments', methods=['POST'])
 def getPayments():
     try:
-        return
+        date_1_str = request.json.get('date_1')
+        date_2_str = request.json.get('date_2')
+
+        date_1 = datetime.datetime.strptime(date_1_str, '%Y-%m-%d').replace(hour=0, minute=0, second=0, microsecond=0)
+        date_2 = datetime.datetime.strptime(date_2_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        print(date_1, date_2)
+
+        print("IN GET PAYMENTS")
+        #date_1 = datetime.datetime.strptime(request.json.get('date_1'), '%Y-%m-%d').date()
+        #date_2 = datetime.datetime.strptime(request.json.get('date_2'), '%Y-%m-%d').date()
+        payments = db.session.execute(text('''
+            SELECT SUM(payment_amount) as total 
+            FROM Payment 
+            WHERE payment_date BETWEEN :date1 AND :date2
+        '''), {'date1': date_1, 'date2': date_2}).fetchone()
+
+
+        print(payments)
+        total = payments.total if payments else 0
+        print(total)
+        
+        return jsonify({"total_payments": total})
     except Exception as e:
-        print(str(e))
+        print(e)
+        return jsonify({"error": str(e)}), 500
 
 '''
 Method to add a member to the Member table.
