@@ -1,28 +1,29 @@
-# Filename - server.py
+# Filename - Server.py
 
-# Import flask and datetime module for showing date and time
-from flask import Flask, jsonify
+# Import necessary modules
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql import text
 import datetime
-from flask import request
+from sqlalchemy.sql import text
 from pytz import timezone
-from sqlalchemy import Enum
-from sqlalchemy.exc import IntegrityError
+import jwt
+from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
-x = datetime.datetime.now()
-
-# Initializing flask app
+# Initialize Flask app
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
-#CORS(app, origins=["http://localhost:3000"], methods=["GET", "POST", "OPTIONS"], allow_headers=["Content-Type"])
-db = SQLAlchemy()
+# Configuring the SQLAlchemy Database URI 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/ChoirDatabase'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-db.init_app(app)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+
+
+
 
 # Define a database model class for the 'Member' table
 class Member(db.Model):
@@ -65,10 +66,7 @@ class VoiceParts(db.Model):
     __tablename__ = 'VoiceParts'
     voice_part_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     member_id = db.Column(db.Integer, db.ForeignKey('Member.member_id'), nullable=False)
-    voice_part = db.Column(
-        Enum('Soprano', 'Alto', 'Tenor', 'Bass', name='voice_part_enum'),
-        nullable=False
-    )
+    voice_part = db.Column(db.String(20), nullable=False)
 
 # Define a database model class for the 'CancellationReason' table
 class CancellationReason(db.Model):
@@ -123,26 +121,13 @@ class Budget(db.Model):
     __tablename__ = 'Budget'
     budget_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     budget_date_set = db.Column(db.Date, nullable=False)
-    budget_amount = db.Column(db.Numeric(12, 2), nullable=False)
+    budget_amount = db.Column(db.Numeric(12, 2), nullable=False)  
 
 
-@app.before_request
-def log_request_info():
-    print("Request headers:", request.headers)
-
-'''
-Endpoint for the frontend's home page. 
-(Endpoint just defines an address where the 
-frontend can requests data from, or sends data to)
-'''
+# Endpoints 
 @app.route('/', methods=['GET'])
 def return_home():
-    return jsonify(
-        {
-        'key': "value",
-        'key2':'Welcome to the home page!'
-        }
-    )
+    return jsonify({'message': 'Welcome to the Choir Home Page!'}) # Return a welcome message for the home page
 
 
 '''
@@ -196,47 +181,6 @@ def getActiveMembers():
         print(e)
         return None
 
-
-'''
-NOTE: PRIORITIZE IMPLEMENTING getRoleAssignmentsByType instead of this
-
-
-Get all MUSICAL roles, which means the role_types can only be one of the following:
-    const roleOptions = [
-        'Accompanist', 
-        'Director', 
-        'BassSectionLeader', 
-        'TenorSectionLeader', 
-        'AltoSectionLeader', 
-        'SopranoSectionLeader'
-    ];
-'''
-@app.route('/getMusicalRoleAssignments', methods =['GET'])
-def getMusicalRoleAssignments():
-    try:
-
-        return
-    except Exception as e:
-        print(str(e))
-
-'''
-NOTE: PRIORITIZE IMPLEMENTING getRoleAssignmentsByType instead of this
-
-Get all BOARD roles, which means the role_types can only be one of the following:
-    const roleOptions = [
-        'BoardMember', 
-        'Treasurer', 
-        'President'
-        
-    ];
-'''
-@app.route('/getBoardRoleAssignments', methods =['GET'])
-def getBoardRoleAssignments():
-    try:
-
-        return
-    except Exception as e:
-        print(str(e))
 
 '''
 Generalized getter for role assignments
@@ -624,8 +568,6 @@ def retrievePotentiallyInactiveMembers():
         print(f"Error: {str(e)}")  # Debugging line
         return jsonify({"error": str(e)}), 400
 
-
-
 '''
 Method to set a member as inactive
 
@@ -647,62 +589,6 @@ def setInactiveMember():
     except Exception as e:
         print(str(e))
         return jsonify({"error": str(e)}), 400        
-    
-
-'''
-Insert new attendance records into the Attendance table.
-Expect values in the json exactly as they appear in the schema
-
-CREATE TABLE PracticeAttendance (
-    practice_id INT PRIMARY KEY AUTO_INCREMENT,
-    member_id INT NOT NULL,
-    practice_date DATE NOT NULL,
-    present BOOLEAN NOT NULL,
-    absence_reason_id INT,
-    specific_reason TEXT,
-    record_time TIMESTAMP NOT NULL,
-    notified_in_advance BOOLEAN DEFAULT FALSE,
-    notes TEXT,
-    FOREIGN KEY (member_id) REFERENCES Member(member_id),
-    FOREIGN KEY (absence_reason_id) REFERENCES AbsenceReason(absence_reason_id)
-);
-'''
-@app.route('/insertNewAttendanceRecords', methods=['POST'])
-def insertNewAttendanceRecords():
-    try:
-
-        return
-    except Exception as e:
-        print(str(e))
-
-'''
-Return all rows of the Role table, who are active members
-
-USES:
-    - Display current role assignments
-
-'''
-@app.route('/getRoleAssignments', methods=['GET'])
-def getRoleAssignments():
-    try:
-
-        return
-    except Exception as e:
-        print(str(e))
-
-
-'''
-Return all members, along with their roles, who have a salary.
-
-    Uses: - Display financial data
-'''
-@app.route('/getSalariedMembers', methods=['GET'])
-def getSalariedMembers():
-    try:
-
-        return
-    except Exception as e:
-        print(str(e))
 
 
 '''
@@ -909,8 +795,53 @@ def testPost():
         except Exception as e:
             print(str(e))
             return jsonify({"error": str(e)}), 400
+    
+# added by milad
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
+        
+        # Check if the user already exists
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            return jsonify({"error": "User already exists"}), 400
+        
+        # Create new user
+        new_user = User(
+            username=username,
+            password_hash=generate_password_hash(password)
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({"message": "User registered successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
+        
+        # Find user in database
+        user = User.query.filter_by(username=username).first()
+        if not user or not check_password_hash(user.password_hash, password):
+            return jsonify({"error": "Invalid username or password"}), 401
+        
+        # Generate JWT token
+        token = jwt.encode({
+            'user_id': user.user_id,
+            'exp': datetime.utcnow() + timedelta(hours=24)  # Token valid for 24 hours
+        }, 'your_secret_key', algorithm='HS256')
+        
+        return jsonify({"message": "Login successful", "token": token}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-# Running app
+# Run the app
 if __name__ == '__main__':
     app.run(debug=True, port=8080)

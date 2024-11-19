@@ -151,3 +151,9 @@ VALUES
     (8, '2024-11-12 08:30:00', 70.00, 'Cash'),
     (9, '2024-11-13 15:30:00', 120.00, 'Credit Card'),
     (10, '2024-11-14 10:00:00', 100.00, 'Debit Card');
+
+/* added by milad */
+INSERT INTO User (username, password_hash)
+VALUES 
+    ('choir_admin', '$2b$12$KIXQ3Q3S9yGpDSFJfu2wLOdEtBw.lE05KiQ29cHCF.eMBCPiIEneO'), -- Example hashed password
+    ('choir_member', '$2b$12$V6g7iyu6qN1Z0HrNLWRFpuyHgf5qTyjBsC2MvPtUvQ.JOk8B/jw.a'); -- Example hashed password
