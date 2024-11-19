@@ -9,7 +9,6 @@ const TodayAttendance = (props) => {
         members.map((member) => ({
             member_id: member.member_id,
             present: true,
-            reason: '',
             notes: '',
             absence_reason_id: undefined
         }))
@@ -88,13 +87,17 @@ const TodayAttendance = (props) => {
                             <td>
                                 {/*if absent, allow them to select an absence reason*/}
                                 <select
-                                    value={attendance[index].absence_reason_id}
+                                    value={attendance[index].absence_reason_id  || -1}
                                     onChange={(e) =>
                                         handleReasonChange(index, e.target.value)
                                     }
                                     disabled={attendance[index].present}
                                 >
                                     {/*use absence reasons in DB to give the user options*/}
+                                    
+                                    <option value={-1} disabled>
+                                        Select a reason
+                                    </option>
                                     {reasons.map((reason) => (
                                         <option
                                             key={reason.absence_reason_id}
