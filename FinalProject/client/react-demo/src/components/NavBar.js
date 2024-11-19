@@ -6,10 +6,6 @@ const NavBar = () => {
         <nav>
             <Link href="/">Home</Link>
             <br></br>
-            <Link href="/members">View Members</Link>
-            <br></br>
-            <Link href="/testPost">Test Post</Link>
-            <br></br>
             <Link href="/manageMembers">Member Management</Link>
             <br></br>
             <Link href="/attendance">Attendance</Link>

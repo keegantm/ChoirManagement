@@ -10,6 +10,7 @@ from pytz import timezone
 import jwt
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.exc import IntegrityError
 
 
 # Initialize Flask app
@@ -22,7 +23,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
-
+x = datetime.now()
 
 
 # Define a database model class for the 'Member' table
@@ -640,10 +641,8 @@ def getPayments():
         date_1_str = request.json.get('date_1')
         date_2_str = request.json.get('date_2')
 
-        date_1 = datetime.datetime.strptime(date_1_str, '%Y-%m-%d').replace(hour=0, minute=0, second=0, microsecond=0)
-        date_2 = datetime.datetime.strptime(date_2_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59, microsecond=999999)
-
-        print(date_1, date_2)
+        #date_1 = datetime.datetime.strptime(date_1_str, '%Y-%m-%d').replace(hour=0, minute=0, second=0, microsecond=0)
+        #date_2 = datetime.datetime.strptime(date_2_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59, microsecond=999999)
 
         print("IN GET PAYMENTS")
         #date_1 = datetime.datetime.strptime(request.json.get('date_1'), '%Y-%m-%d').date()
@@ -652,7 +651,7 @@ def getPayments():
             SELECT SUM(payment_amount) as total 
             FROM Payment 
             WHERE payment_date BETWEEN :date1 AND :date2
-        '''), {'date1': date_1, 'date2': date_2}).fetchone()
+        '''), {'date1': date_1_str, 'date2': date_2_str}).fetchone()
 
 
         print(payments)
@@ -795,7 +794,7 @@ def testPost():
         except Exception as e:
             print(str(e))
             return jsonify({"error": str(e)}), 400
-    
+'''
 # added by milad
 @app.route('/register', methods=['POST'])
 def register():
@@ -841,7 +840,7 @@ def login():
         return jsonify({"message": "Login successful", "token": token}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+'''
 # Run the app
 if __name__ == '__main__':
     app.run(debug=True, port=8080)
