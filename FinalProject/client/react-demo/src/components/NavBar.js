@@ -14,6 +14,9 @@ const NavBar = () => {
             <br></br>
             <Link href="/attendance">Attendance</Link>
             <br></br>
+            <Link href="/viewFinancialInfo">View Financial Information</Link>
+            <br></br>
+
         </nav>
     )
 }

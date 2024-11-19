@@ -123,8 +123,6 @@ class Budget(db.Model):
     budget_date_set = db.Column(db.Date, nullable=False)
     budget_amount = db.Column(db.Numeric(12, 2), nullable=False)  
 
-# added by milad
-
 
 # Endpoints 
 @app.route('/', methods=['GET'])
@@ -132,17 +130,573 @@ def return_home():
     return jsonify({'message': 'Welcome to the Choir Home Page!'}) # Return a welcome message for the home page
 
 
-# Adds a new member to the choir database.
+'''
+Get User Permissions
+
+Will send permissions of the logged in user, which will then be 
+used to conditionally render the management tools that they have access to
+
+Until we have authentication set up, just return True for everything
+'''
+@app.route('/getUserPermissions', methods=['GET'])
+def getUserPermissions():
+    try:
+
+        permissions = {'canEditMusicalRoles': True, 
+                       'canEditBoardRoles': True,
+                       'canAddMembers' : True,
+                        'canChangeActiveStatus': True
+        }
+
+        return jsonify(permissions)
+
+    except Exception as e:
+        print(str(e))
+
+'''
+Get all currently active members
+
+
+'''
+@app.route('/getActiveMembers', methods=['GET'])
+def getActiveMembers():
+    try:
+        #print("GETTING ACTIVE MEMBERS")
+        # Querying the users table
+        result = db.session.execute(text('SELECT member_id, first_name, last_name FROM Member WHERE is_active = True')).fetchall()
+        #print("Got result")
+        members = [{'member_id': row[0], 'first_name': row[1], 'last_name' : row[2]} for row in result]
+        
+        #print(members)
+
+        # If no results found
+        if not members:
+            print("ERROR, didnt find any active members")
+            return '<h1>No data found.</h1>'
+
+        # Return the result as JSON
+        return jsonify(members)
+    except Exception as e:
+        print("GET ACTIVE MEMBERS FAILED")
+        print(e)
+        return None
+
+
+'''
+Generalized getter for role assignments
+Will receive a list of types that are valid : 
+
+Options:
+    roleOptions =[
+        'BoardMember', 
+        'Treasurer', 
+        'President'
+        'Accompanist', 
+        'Director', 
+        'BassSectionLeader', 
+        'TenorSectionLeader', 
+        'AltoSectionLeader', 
+        'SopranoSectionLeader']
+
+    Will acess via request.json.get(roleOptions)
+
+Steps:
+- Get all role rows of with matching role_type 
+- Inner join by Member id to add the corresponding Member rows
+- Jsonify and return
+
+'''
+@app.route('/getRoleAssignmentsByType', methods=['POST'])
+def getRoleAssignmentsByType():
+    print("getRoleAssignmentsByType")
+    try:
+
+        print("GETTING ROLE ASSIGNMENTS OF TYPE:")
+        print(request)
+        role_options = request.json.get('role_types')
+        print(role_options)
+
+        query = text('''
+            SELECT Role.role_id, Role.role_type, Role.member_id, Member.first_name, Member.last_name
+            FROM Role
+            INNER JOIN Member ON Role.member_id = Member.member_id
+            WHERE Role.role_type IN :role_types
+        ''')
+
+        
+        result = db.session.execute(query, {'role_types': tuple(role_options)}).fetchall()
+        
+        # Convert the result to a list of dictionaries
+        role_assignments = [
+            {
+                "role_id": row.role_id,
+                "role_type": row.role_type,
+                "member_id": row.member_id,
+                "first_name": row.first_name,
+                "last_name": row.last_name
+            }
+            for row in result
+        ]
+        
+        # Return the data as JSON
+        return jsonify(role_assignments)
+    except Exception as e:
+        print("ERROR", e)
+        return jsonify({"error": str(e)}), 400
+
+'''
+Given a role_id, and a role_type, update the role_type of 
+the existing row in the Role table
+
+If successful, return a json with the role_id and role_type
+'''
+@app.route('/updateExistingRole', methods=['POST', 'GET'])
+def updateExistingRole():
+    print("updating role assignment")
+    try:
+
+        role_id = request.json.get('role_id')
+        role_type = request.json.get('role_type')
+
+        query = text('''
+            UPDATE Role
+            SET role_type = :role_type
+            WHERE role_id = :role_id
+        ''')
+
+        result = db.session.execute(query, {"role_id" : role_id, "role_type":role_type})
+        db.session.commit()
+
+        # Convert the result to a list of dictionaries
+        updated_role_info = {
+            "role_id" : role_id,
+            "role_type" : role_type
+        }
+        
+        # Return the data as JSON
+        return jsonify(updated_role_info)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": str(e)}), 400
+
+'''
+Given a roleId, delete the row from the table
+
+'''
+@app.route('/deleteRoleRow', methods=['POST', 'DELETE'])
+def deleteRoleRow():
+    print("deleting role assignment")
+
+    try:
+        role_id = request.json.get('role_id')
+
+        query = text('''
+            DELETE FROM Role
+            WHERE role_id = :role_id
+        ''')
+
+        result = db.session.execute(query, {"role_id" : role_id})
+        db.session.commit()
+
+        # Convert the result to a list of dictionaries
+        updated_role_info = {
+            "role_id" : role_id,
+        }
+        
+        # Return the data as JSON
+        return jsonify(updated_role_info)
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": str(e)}), 400
+
+
+'''
+Create a new Role row, given a role_type and a member_id
+
+CREATE TABLE Role (
+    role_id INT PRIMARY KEY AUTO_INCREMENT,
+    member_id INT NOT NULL,
+    role_type VARCHAR(50) NOT NULL,
+    salary_amount DECIMAL(10, 2) DEFAULT 0.00,
+    role_start_date DATE NOT NULL,
+    role_end_date DATE,
+    FOREIGN KEY (member_id) REFERENCES Member(member_id)
+
+
+AFTER you add the row, query the DB to inner join this new Role row with their Member row.
+Jsonify this, and return it
+);
+'''
+@app.route('/assignNewRole', methods=['POST', 'GET'])
+def assignNewRole():
+    print("assigning new role")
+
+    try:
+        #problem: this is a name, instead of an int
+        member_id = request.json.get('member_id')
+        role_type = request.json.get('role_type')
+        role_start_date = request.json.get('role_start_date')
+
+
+        query = text('''
+            INSERT INTO Role (member_id, role_type, role_start_date)
+            VALUES (:member_id, :role_type, :role_start_date)
+        ''')
+
+        db.session.execute(query, {
+            "member_id": member_id,
+            "role_type": role_type,
+            "role_start_date": role_start_date
+        })
+        db.session.commit()
+
+        # Return the data as JSON
+        return jsonify({'status' : 'successful add row'})
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": str(e)}), 400
+
+'''
+Return all active members, who joined on or after the given date
+
+USES:
+    - get members for current day attendance
+    - searching the names of members, to see current roles & edit these roles
+
+The date will be accessible via: 
+date = request.json.get('date') Expected format: 'YYYY-MM-DD'
+'''
+@app.route('/getActiveAfterDate', methods=['GET'])
+def getActiveMembersAfterDate():
+    try:
+
+        return
+    except Exception as e:
+        print(str(e))
+
+'''
+Return all entries from the voiceparts table, where the member is Active
+
+USES:
+    - Map Members -> Their voice part for attendance.
+
+'''
+@app.route('/getActiveVoiceParts', methods=['GET'])
+def getActiveVoiceParts():
+    try:
+        results = db.session.query(VoiceParts, Member).join(Member).filter(Member.is_active == True).all()
+        data = []
+        for voice_part, member in results:
+            data.append({
+                "voice_part_id": voice_part.voice_part_id,
+                "member_id": voice_part.member_id,
+                "voice_part": voice_part.voice_part,
+                "first_name": member.first_name,
+                "last_name": member.last_name,
+                "email": member.email,
+                "join_date": member.join_date.isoformat(),  # Convert date to string
+                "address_line_1": member.address_line_1,
+                "address_line_2": member.address_line_2,
+                "city": member.city,
+                "state": member.state,
+                "postal_code": member.postal_code
+            })
+        
+        return jsonify(data), 200
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": str(e)}), 400
+
+
+'''
+Endpoint for adding a new voice part row
+
+'''
+@app.route('/addVoicePart', methods=['POST'])
+def add_voice_part():
+    try:
+        data = request.json
+        print(data)
+        new_voice_part = VoiceParts( 
+            member_id=data.get('member_id'), # Get member ID for association
+            voice_part=data.get('voice_part') # Set the voice part
+        )
+
+        db.session.add(new_voice_part) # Add new voice part record
+
+        db.session.commit() # Commit changes to the database
+        return jsonify({"message": "Voice part added successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500 # Handle errors 
+
+'''
+Remove a voice part row, given its id
+
+The Id will be accessible via: 
+voice_part_id = request.json.get('voice_part_id')
+
+'''
+@app.route('/deleteVoicePart', methods=['POST', 'DELETE'])
+def deleteVoicePart():
+    print("deleting voice part assignment")
+
+    try:
+        voice_part_id = request.json.get('voice_part_id')
+
+        query = text('''
+            DELETE FROM VoiceParts
+            WHERE voice_part_id = :voice_part_id
+        ''')
+
+        result = db.session.execute(query, {"voice_part_id" : voice_part_id})
+        db.session.commit()
+
+        updated_role_info = {
+            "voice_part_id" : voice_part_id,
+        }
+        
+        # Return the data as JSON
+        return jsonify(updated_role_info)
+
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": str(e)}), 400
+
+'''
+Given a voice_part_id, and a voice_part, update the voice_part of 
+the existing row in the VoiceParts table
+
+If successful, return a json with the voice_part_id and voice_part
+'''
+@app.route('/updateExistingVoicePart', methods=['POST', 'GET'])
+def updateExistingVoicePart():
+    print("updating voice part assignment")
+    try:
+
+        voice_part_id = request.json.get('voice_part_id')
+        voice_part = request.json.get('voice_part')
+
+        query = text('''
+            UPDATE VoiceParts
+            SET voice_part = :voice_part
+            WHERE voice_part_id = :voice_part_id
+        ''')
+
+        result = db.session.execute(query, {"voice_part_id" : voice_part_id, "voice_part":voice_part})
+        db.session.commit()
+
+        # Convert the result to a list of dictionaries
+        updated_part_info = {
+            "voice_part_id" : voice_part_id,
+            "voice_part" : voice_part
+        }
+        
+        # Return the data as JSON
+        return jsonify(updated_part_info)
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": str(e)}), 400
+
+
+'''
+Method to retrieve potentially inactive members of the choir
+
+NOTE: Currently does not account for excused absenses
+
+If keep AbsenceReason table, can 
+Left Join it into this. Then, add AND (is_excused = FALSE OR is_excused IS NULL)
+to the where clause
+'''
+@app.route('/retrievePotentiallyInactiveMembers', methods=['POST', 'GET'])
+def retrievePotentiallyInactiveMembers():
+    try:
+        #get number of practices
+        practice_count_query = text("""
+            SELECT COUNT(DISTINCT practice_date) AS practice_count
+            FROM PracticeAttendance
+        """)
+        result = db.session.execute(practice_count_query).fetchone()
+
+        #if there are under 5 practices, return empty list
+        if result[0] < 5:
+            print("Less than 5 distinct practice dates, returning empty list.")
+            return jsonify([])
+
+        #get the five most recent practices
+        recent_practice_dates_query = text("""
+            SELECT DISTINCT practice_date
+            FROM PracticeAttendance
+            ORDER BY practice_date DESC
+            LIMIT 5
+        """)
+        recent_practice_dates = db.session.execute(recent_practice_dates_query).fetchall()
+        recent_practice_dates = [row[0] for row in recent_practice_dates]  # Extract dates
+
+        members_absent_query = text("""
+            SELECT DISTINCT Member.member_id, Member.first_name, Member.last_name
+            FROM Member
+            LEFT JOIN PracticeAttendance 
+                ON Member.member_id = PracticeAttendance.member_id
+                AND PracticeAttendance.practice_date IN :recent_dates
+            WHERE ((PracticeAttendance.present = FALSE OR PracticeAttendance.practice_date IS NULL)
+            AND (Member.is_active = True))
+            GROUP BY Member.member_id, Member.first_name, Member.last_name
+            HAVING COUNT(DISTINCT PracticeAttendance.practice_date) = 5
+        """)
+        members_absent = db.session.execute(members_absent_query, {'recent_dates': tuple(recent_practice_dates)}).fetchall()
+
+        #no members found, return empty list
+        if not members_absent:
+            print("No members found who missed all of the recent practices, returning empty list.")
+            return jsonify([])
+
+        absent_members_list = [
+            {
+                "member_id": row.member_id,
+                "first_name": row.first_name,
+                "last_name": row.last_name,
+            }
+            for row in members_absent
+        ]
+
+        return jsonify(absent_members_list)
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Debugging line
+        return jsonify({"error": str(e)}), 400
+
+'''
+Method to set a member as inactive
+
+'''
+@app.route('/setInactiveMember', methods=['POST'])
+def setInactiveMember():
+    try:
+        member_id = request.json.get('member_id')
+        print(member_id)
+        member = db.session.query(Member).filter_by(member_id=member_id).first()
+
+        if not member:
+            return jsonify({"message": "Member not found"}), 404
+        
+        member.is_active = False
+        db.session.commit()
+
+        return (jsonify({'member_id' : member_id}))
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": str(e)}), 400        
+
+
+'''
+Return the most recent budget
+'''
+@app.route('/getCurrentBudget', methods=['GET'])
+def get_current_budget():
+    try:
+        recent_budget = Budget.query.order_by(Budget.budget_date_set.desc()).first()
+
+        if recent_budget:
+            return jsonify({
+                'budget_amount': str(recent_budget.budget_amount),
+                'budget_date_set': recent_budget.budget_date_set.strftime('%Y-%m-%d')
+            })
+        else:
+            return jsonify({"error": "No budget found"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    
+'''
+Create a new budget row, from the input date and amount
+
+    budget_id INT PRIMARY KEY AUTO_INCREMENT,
+    budget_date_set DATE NOT NULL,
+    budget_amount DECIMAL(12, 2) NOT NULL
+
+'''
+@app.route('/setBudget', methods=['POST'])
+def setBudget():
+    try:
+        return
+    except Exception as e:
+        print(str(e))
+
+'''
+Return a SUM of the payments between two input dates.
+
+Dates will be accessible via:
+date_1 = request.json.get('date_1') YYYY-MM-DD Format
+date_2 = request.json.get('date_2')
+
+'''
+@app.route('/getPayments', methods=['POST'])
+def getPayments():
+    try:
+        date_1_str = request.json.get('date_1')
+        date_2_str = request.json.get('date_2')
+
+        date_1 = datetime.datetime.strptime(date_1_str, '%Y-%m-%d').replace(hour=0, minute=0, second=0, microsecond=0)
+        date_2 = datetime.datetime.strptime(date_2_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        print(date_1, date_2)
+
+        print("IN GET PAYMENTS")
+        #date_1 = datetime.datetime.strptime(request.json.get('date_1'), '%Y-%m-%d').date()
+        #date_2 = datetime.datetime.strptime(request.json.get('date_2'), '%Y-%m-%d').date()
+        payments = db.session.execute(text('''
+            SELECT SUM(payment_amount) as total 
+            FROM Payment 
+            WHERE payment_date BETWEEN :date1 AND :date2
+        '''), {'date1': date_1, 'date2': date_2}).fetchone()
+
+
+        print(payments)
+        total = payments.total if payments else 0
+        print(total)
+        
+        return jsonify({"total_payments": total})
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
+
+'''
+Method to add a member to the Member table.
+
+Expect key names exactly as they appear in the Schema 
+    member_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(80) UNIQUE NOT NULL,
+    join_date DATE NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    address_line_1 VARCHAR(50) NOT NULL,
+    address_line_2 VARCHAR(50),
+    city VARCHAR(100) NOT NULL,
+    state CHAR(2) NOT NULL,
+    postal_code VARCHAR(5) NOT NULL
+
+'''
 @app.route('/addMember', methods=['POST'])
-def add_member():
+def addMember():
     try:
         data = request.json # Extract data from the incoming JSON request
+
+        required_fields = ["first_name", "last_name", "email", "join_date", "address_line_1", "city", "state", "postal_code"]
+        missing_fields = [field for field in required_fields if not data.get(field) or data.get(field).strip() == ""]
+
+        if missing_fields:
+            raise ValueError(f"The following fields are required and cannot be empty: {', '.join(missing_fields)}")
+
         new_member = Member(
             first_name=data.get('first_name'),
             last_name=data.get('last_name'),
             email=data.get('email'),
-            join_date=datetime.datetime.strptime(data.get('join_date'), '%Y-%m-%d').date(), # Convert string date to a date object
-            is_active=data.get('is_active', True), # Set default value for is_active if not provided
+            join_date=data.get('join_date'),
             address_line_1=data.get('address_line_1'),
             address_line_2=data.get('address_line_2', ''), # Set default empty string for optional address field
             city=data.get('city'),
@@ -151,117 +705,96 @@ def add_member():
         )
         db.session.add(new_member) # Add new member to the database snessio
         db.session.commit() # Commit changes to the database
-        return jsonify({"message": "Member added successfully"})
+
+        return jsonify( {"message": "Member added successfully"})
+    #for non-unique email
+    except IntegrityError:
+        print("Email Error")
+        return jsonify({'message': 'A member with this email already exists'}), 400
+    except ValueError as e:
+        print("Empty Field Error")
+        return jsonify({'message': str(e)}), 400
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 # Return error message if exception occurs
+        print(str(e))
+        return jsonify({"error": str(e)}), 400
 
 
-# Adds a voice part assignment for a specified member.
-@app.route('/addVoicePart', methods=['POST'])
-def add_voice_part():
+'''
+Method to query the db, and just get all Members in a JSON 
+'''
+@app.route('/testDb', methods=['GET'])
+def testdb():
     try:
-        data = request.json
-        new_voice_part = VoiceParts( 
-            member_id=data.get('member_id'), # Get member ID for association
-            voice_part=data.get('voice_part') # Set the voice part
-        )
-        db.session.add(new_voice_part) # Add new voice part record
-        db.session.commit() # Commit changes to the database
-        return jsonify({"message": "Voice part added successfully"})
+        # Querying the users table
+        result = db.session.execute(text('SELECT memberId, first_name FROM Member')).fetchall()
+        members = [{'memberId': row[0], 'name': row[1]} for row in result]
+        
+        # If no results found
+        if not members:
+            return '<h1>No data found.</h1>'
+
+        # Return the result as JSON
+        return jsonify(members)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 # Handle errors 
+        # e holds description of the error
+        error_text = "<p>The error:<br>" + str(e) + "</p>"
+        hed = '<h1>Something is broken.</h1>'
+        return hed + error_text
 
+'''
+Example method of how to post into the DB
+'''
+@app.route('/testPost', methods=['POST'])
+def testPost():
+    if request.method == 'POST':
+        try:
+            # Extracting data from the request
+            first_name = request.json.get('name')  # Assumes JSON input with {"name": "testName"}
+            
+            # Define default values for other columns
+            last_name = "Doe"
+            email = f"{first_name.lower()}@example.com"
+            join_date = x.today()  # Use today's date as join date
+            is_active = True
+            address_line_1 = "123 Main St"
+            address_line_2 = ""
+            city = "Sample City"
+            state = "SC"
+            postal_code = "12345"
 
-# Assigns a role with optional salary details to a member.
-@app.route('/assignRole', methods=['POST'])
-def assign_role():
-    try:
-        data = request.json
-        new_role = Role(
-            member_id=data.get('member_id'),
-            role_type=data.get('role_type'),
-            salary_amount=data.get('salary_amount', 0.00), # Set default salary amount as zero
-            role_start_date=datetime.datetime.strptime(data.get('role_start_date'), '%Y-%m-%d').date(),
-            role_end_date=datetime.datetime.strptime(data.get('role_end_date'), '%Y-%m-%d').date() if data.get('role_end_date') else None
-        )
-        db.session.add(new_role)
-        db.session.commit()
-        return jsonify({"message": "Role assigned successfully"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500 # Handle error
+            # Executing the INSERT statement with a parameterized query
+            db.session.execute(
+                text('''
+                    INSERT INTO Member (
+                        first_name, last_name, email, join_date, is_active,
+                        address_line_1, address_line_2, city, state, postal_code
+                    ) VALUES (
+                        :first_name, :last_name, :email, :join_date, :is_active,
+                        :address_line_1, :address_line_2, :city, :state, :postal_code
+                    )
+                '''),
+                {
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "email": email,
+                    "join_date": join_date,
+                    "is_active": is_active,
+                    "address_line_1": address_line_1,
+                    "address_line_2": address_line_2,
+                    "city": city,
+                    "state": state,
+                    "postal_code": postal_code
+                }
+            )
 
+            # Committing the transaction to save changes
+            db.session.commit()
 
-# Records an attendance entry for a member's practice session.
-@app.route('/addAttendance', methods=['POST'])
-def add_attendance():
-    try:
-        data = request.json
-        new_attendance = Attendance(
-            member_id=data.get('member_id'),
-            practice_date=datetime.datetime.strptime(data.get('practice_date'), '%Y-%m-%d').date(), # Convert date to a date object
-            present=data.get('present'),
-            absence_reason_id=data.get('absence_reason_id'),
-            specific_reason=data.get('specific_reason', ''), # Set default for specific reason
-            notified_in_advance=data.get('notified_in_advance', False), # Set default for notified flag
-            notes=data.get('notes', '') # Set default for notes
-        )
-        db.session.add(new_attendance)
-        db.session.commit()
-        return jsonify({"message": "Attendance record added successfully"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+            return jsonify({"message": "Data inserted successfully"})
 
-
-# Sets a budget record with a specified amount and date.
-@app.route('/setBudget', methods=['POST'])
-def set_budget():
-    try:
-        data = request.json
-        new_budget = Budget(
-            budget_date_set=datetime.datetime.strptime(data.get('budget_date_set'), '%Y-%m-%d').date(),
-            budget_amount=data.get('budget_amount') # Set budget amount
-        )
-        db.session.add(new_budget)
-        db.session.commit()
-        return jsonify({"message": "Budget set successfully"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# Retrieves a list of members who receive a salary.
-@app.route('/getSalariedMembers', methods=['GET'])
-def get_salaried_members():
-    try:
-        roles = Role.query.filter(Role.salary_amount > 0).all() # Query members with salaries
-        salaried_members = [{"role_id": r.role_id, "member_id": r.member_id, "role_type": r.role_type, "salary_amount": r.salary_amount} for r in roles]
-        return jsonify(salaried_members)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# Retrieves budget entries for the current year.
-@app.route('/getCurrentBudget', methods=['GET'])
-def get_current_budget():
-    try:
-        current_year = datetime.datetime.now().year # Get current year for filtering
-        # Query budgets that are set for the current year
-        budgets = Budget.query.filter(Budget.budget_date_set.year == current_year).order_by(Budget.budget_date_set.desc()).all()
-        budget_list = [{"budget_id": b.budget_id, "amount": b.budget_amount, "date_set": b.budget_date_set.strftime('%Y-%m-%d')} for b in budgets]
-        return jsonify(budget_list)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# Provides a summary of payments made within a specified date range.
-@app.route('/getPaymentsSummary', methods=['POST'])
-def get_payments_summary():
-    try:
-        date_1 = datetime.datetime.strptime(request.json.get('date_1'), '%Y-%m-%d').date()
-        date_2 = datetime.datetime.strptime(request.json.get('date_2'), '%Y-%m-%d').date()
-        payments = db.session.execute(text('SELECT SUM(payment_amount) as total FROM Payment WHERE payment_date BETWEEN :date1 AND :date2'), {'date1': date_1, 'date2': date_2}).fetchone()
-        total = payments.total if payments else 0
-        return jsonify({"total_payments": total})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        except Exception as e:
+            print(str(e))
+            return jsonify({"error": str(e)}), 400
     
 # added by milad
 @app.route('/register', methods=['POST'])
