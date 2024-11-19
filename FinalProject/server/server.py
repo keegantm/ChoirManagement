@@ -740,6 +740,22 @@ def testdb():
         hed = '<h1>Something is broken.</h1>'
         return hed + error_text
 
+@app.route('/getAbsenceReasons', methods=['GET'])
+def getAbsenceReasons():
+    absence_reasons = AbsenceReason.query.all()
+    
+    absence_reasons_list = [
+        {
+            "absence_reason_id": ar.absence_reason_id,
+            "reason_category": ar.reason_category,
+            "description": ar.description,
+            "is_excused": ar.is_excused
+        }
+        for ar in absence_reasons
+    ]
+    
+    return jsonify(absence_reasons_list)
+
 '''
 Example method of how to post into the DB
 '''
@@ -794,6 +810,9 @@ def testPost():
         except Exception as e:
             print(str(e))
             return jsonify({"error": str(e)}), 400
+        
+
+
 '''
 # added by milad
 @app.route('/register', methods=['POST'])
