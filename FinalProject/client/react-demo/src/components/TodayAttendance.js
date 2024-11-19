@@ -11,6 +11,7 @@ const TodayAttendance = (props) => {
             present: true,
             reason: '',
             notes: '',
+            absence_reason_id: undefined
         }))
     );
 
@@ -18,16 +19,21 @@ const TodayAttendance = (props) => {
     const handleCheckboxChange = (index) => {
         setAttendance((prev) =>
             prev.map((row, i) =>
-                i === index ? { ...row, present: !row.present } : row
+                i === index ? { ...row, 
+                            present: !row.present ,
+                            //if present, reset absence info to the defaults 
+                            absence_reason_id: !prev[index].present ? undefined : row.absence_reason_id,
+                            notes: !prev[index].present ? '' : row.notes
+                            } : row
             )
         );
     };
 
     //update the absense reason for this member
-    const handleReasonChange = (index, newReason) => {
+    const handleReasonChange = (index, newReasonID) => {
         setAttendance((prev) =>
             prev.map((row, i) =>
-                i === index ? { ...row, reason: newReason } : row
+                i === index ? { ...row, absence_reason_id: newReasonID } : row
             )
         );
     };
@@ -42,7 +48,6 @@ const TodayAttendance = (props) => {
     };
 
     const handleSubmit = () => {
-        
            console.log(attendance)
     };
 
@@ -71,7 +76,7 @@ const TodayAttendance = (props) => {
                     {members.map((member, index) => (
                         <tr key={member.member_id}>
                             {/*member name*/}
-                            <td>{`${member.first_name} ${member.last_name}`}</td>
+                            <td>{member.first_name} {member.last_name}</td>
                             {/*checkbox indicating if they are present*/}
                             <td>
                                 <input
@@ -83,17 +88,17 @@ const TodayAttendance = (props) => {
                             <td>
                                 {/*if absent, allow them to select an absence reason*/}
                                 <select
-                                    value={attendance[index].reason}
+                                    value={attendance[index].absence_reason_id}
                                     onChange={(e) =>
                                         handleReasonChange(index, e.target.value)
                                     }
                                     disabled={attendance[index].present}
                                 >
                                     {/*use absence reasons in DB to give the user options*/}
-                                    {reasons.map((reason, i) => (
+                                    {reasons.map((reason) => (
                                         <option
-                                            key={i}
-                                            value={reason.reason_category}
+                                            key={reason.absence_reason_id}
+                                            value={reason.absence_reason_id}
                                         >
                                             {reason.reason_category}
                                         </option>
