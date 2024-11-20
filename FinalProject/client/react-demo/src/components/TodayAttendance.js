@@ -46,8 +46,44 @@ const TodayAttendance = (props) => {
         );
     };
 
-    const handleSubmit = () => {
-           console.log(attendance)
+    const handleSubmit = async () => {
+        try{
+            console.log(attendance)
+
+            let current_date = new Date()
+            let formattedDate = current_date.toISOString().split('T')[0]
+
+            //if present=false and undefined attendance reason
+            //then set the absence_reason_id = 6 (Unknown Reason)
+            const processed_attendance = attendance.map((member) => 
+                (!member.present && member.absence_reason_id === undefined) 
+                    ? { ...member, absence_reason_id: 6,  practice_date:formattedDate} 
+                    : {...member, practice_date:formattedDate}
+            );
+            
+            //post each individual member's attendance
+            //to help handle multiple records being input for the same practice
+            const responses = await Promise.all(
+                processed_attendance.map((member) =>
+                    fetch('http://localhost:8080/addAttendance', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(member),
+                    })
+                )
+            );
+            
+            const results = await Promise.all(responses.map((res) => res.json()));
+
+            console.log(results)
+
+        }
+        catch (error){
+            console.error("Error adding a attendance record:", error);
+        }
+
     };
 
     if (!members || members.length === 0) {

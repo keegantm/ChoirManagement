@@ -4,14 +4,15 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-import datetime
+#import datetime
 from sqlalchemy.sql import text
 from pytz import timezone
 import jwt
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
-
+from datetime import datetime
+from pytz import timezone
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -103,7 +104,7 @@ class Attendance(db.Model):
     present = db.Column(db.Boolean, nullable=False)
     absence_reason_id = db.Column(db.Integer, db.ForeignKey('AbsenceReason.absence_reason_id'), nullable=True)  
     specific_reason = db.Column(db.String(255), nullable=True)
-    record_time = db.Column(db.DateTime, default=lambda: datetime.datetime.now(timezone('EST')), nullable=False)
+    record_time = db.Column(db.DateTime, default=lambda: datetime.now(timezone('EST')).replace(tzinfo=None))
     notified_in_advance = db.Column(db.Boolean, default=False)
     notes = db.Column(db.String(255), nullable=True)
 
@@ -717,6 +718,63 @@ def addMember():
         print(str(e))
         return jsonify({"error": str(e)}), 400
 
+# Records an attendance entry for a member's practice session.
+@app.route('/addAttendance', methods=['POST'])
+def add_attendance():
+    try:
+        data = request.json
+
+        practice_date = datetime.strptime(data.get('practice_date'), '%Y-%m-%d')
+
+        existing_attendance = Attendance.query.filter_by(
+            member_id=data.get('member_id'),
+            practice_date=practice_date
+        ).first()
+
+        print(practice_date)
+
+        if existing_attendance:
+            print("UPDATING OLD ROW")
+
+            # Update the existing record
+            existing_attendance.present = data.get('present')
+            existing_attendance.absence_reason_id = data.get('absence_reason_id')
+            existing_attendance.notes = data.get('notes', existing_attendance.notes)
+        else:
+            print("ADDING NEW ROW")
+            new_attendance = Attendance(
+                member_id=data.get('member_id'),
+                practice_date=practice_date, 
+                present=data.get('present'),
+                absence_reason_id=data.get('absence_reason_id'),
+                specific_reason=data.get('specific_reason', ''), # Set default for specific reason
+                notified_in_advance=data.get('notified_in_advance', False), # Set default for notified flag
+                notes=data.get('notes', '') # Set default for notes
+            )
+            db.session.add(new_attendance)
+        
+        db.session.commit()
+        return jsonify({"message": "Attendance record added successfully"})
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/getAbsenceReasons', methods=['GET'])
+def getAbsenceReasons():
+    absence_reasons = AbsenceReason.query.all()
+    
+    absence_reasons_list = [
+        {
+            "absence_reason_id": ar.absence_reason_id,
+            "reason_category": ar.reason_category,
+            "description": ar.description,
+            "is_excused": ar.is_excused
+        }
+        for ar in absence_reasons
+    ]
+    
+    return jsonify(absence_reasons_list)
 
 '''
 Method to query the db, and just get all Members in a JSON 
@@ -739,22 +797,6 @@ def testdb():
         error_text = "<p>The error:<br>" + str(e) + "</p>"
         hed = '<h1>Something is broken.</h1>'
         return hed + error_text
-
-@app.route('/getAbsenceReasons', methods=['GET'])
-def getAbsenceReasons():
-    absence_reasons = AbsenceReason.query.all()
-    
-    absence_reasons_list = [
-        {
-            "absence_reason_id": ar.absence_reason_id,
-            "reason_category": ar.reason_category,
-            "description": ar.description,
-            "is_excused": ar.is_excused
-        }
-        for ar in absence_reasons
-    ]
-    
-    return jsonify(absence_reasons_list)
 
 '''
 Example method of how to post into the DB
