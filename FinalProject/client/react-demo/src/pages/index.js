@@ -18,7 +18,7 @@ function index() {
           console.log(data)
           
           //use the json to display a msg
-          setMessage(data.key2)
+          setMessage(data.message)
         })
     )}, []) //use the empty array to only make this run when the page loads
 

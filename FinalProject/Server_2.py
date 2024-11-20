@@ -1,5 +1,3 @@
-# Filename - Server.py
-
 # Import necessary modules
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -125,11 +123,111 @@ class Budget(db.Model):
     budget_date_set = db.Column(db.Date, nullable=False)
     budget_amount = db.Column(db.Numeric(12, 2), nullable=False)  
 
+'''
+TODOS
+- Create a new database class User, for Milad's Login and Register endpoints
+- Modify the /register endpoint:
+    Verify that the recieved username (an email) exists as an email in
+    the Members table. If none exist, throw an error
+-Modify the /login endpoint:
+    We need a way to insert what permissions a user has into the token.
+    For now, we have these permissions:
+        canEditMusicalRoles
+        canEditBoardRoles
+        canAddMembers
+        canChangeActiveStatus
+        isAttendanceManager
+        canViewFinancialData
+
+    These permissions are dependent on the roles that the user logging in has
+    
+    canEditMusicalRoles is TRUE for: Accompanist, Director, BassSectionLeader, TenorSectionLeader, AltoSectionLeader, SopranoSectionLeader
+    canEditBoardRoles is TRUE for: BoardMember, Treasurer, President
+    canAddMembers is TRUE for any role-holder right now. 
+    canChangeActiveStatus is TRUE for  any role-holder right now. 
+    isAttendanceManager is TRUE for  any role-holder right now. 
+    canViewFinancialData is TRUE for : BoardMember, Treasurer, President
+
+    So for each user, once we've determined that they can be logged in:
+    - Find their row in the member table, to get their member_id (use the shared unique username for this join)
+    - Get the role_type of each row where they appear in the Role table
+    - If that role grants them special permissions, set that permission to = True. 
+    - Create the token
+
+    The token creation will probably look like a longer version of this:
+    
+        can_edit_musical_roles = false
+        can_add_members = true
+
+        (logic + queries to determine if the user is one of these roles: Accompanist, Director, BassSectionLeader, TenorSectionLeader, AltoSectionLeader, SopranoSectionLeader)
+
+        token = jwt.encode({
+            'user_id': user.user_id,
+            'canEditMusicalRoles': can_edit_musical_roles,
+            'canAddMembers' : can_add_members,
+            'exp': datetime.utcnow() + timedelta(hours=24)  # Token valid for 24 hours
+        }, 'your_secret_key', algorithm='HS256')
+
+One more task for login is the creation and storage of a secret key. 
+Where it currently says 'your_secret_key' in the code, we need to 
+replace that with a secret key stored in a .env file
+
+'''
+
 
 # Endpoints 
 @app.route('/', methods=['GET'])
 def return_home():
     return jsonify({'message': 'Welcome to the Choir Home Page!'}) # Return a welcome message for the home page
+
+
+# added by milad
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        data = request.json
+        #username will be an email
+        username = data.get('username')
+        password = data.get('password')
+        
+        # Check if the user already exists
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            return jsonify({"error": "User already exists"}), 400
+        
+        # Create new user
+        new_user = User(
+            username=username,
+            password_hash=generate_password_hash(password)
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({"message": "User registered successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
+        
+        # Find user in database
+        user = User.query.filter_by(username=username).first()
+        if not user or not check_password_hash(user.password_hash, password):
+            return jsonify({"error": "Invalid username or password"}), 401
+        
+        # Generate JWT token
+        token = jwt.encode({
+            'user_id': user.user_id,
+            'exp': datetime.utcnow() + timedelta(hours=24)  # Token valid for 24 hours
+        }, 'your_secret_key', algorithm='HS256')
+        
+        return jsonify({"message": "Login successful", "token": token}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 '''
 Get User Permissions
@@ -755,55 +853,6 @@ def getAbsenceReasons():
     ]
     
     return jsonify(absence_reasons_list)
-        
-
-
-
-# added by milad
-@app.route('/register', methods=['POST'])
-def register():
-    try:
-        data = request.json
-        username = data.get('username')
-        password = data.get('password')
-        
-        # Check if the user already exists
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            return jsonify({"error": "User already exists"}), 400
-        
-        # Create new user
-        new_user = User(
-            username=username,
-            password_hash=generate_password_hash(password)
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        return jsonify({"message": "User registered successfully"}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/login', methods=['POST'])
-def login():
-    try:
-        data = request.json
-        username = data.get('username')
-        password = data.get('password')
-        
-        # Find user in database
-        user = User.query.filter_by(username=username).first()
-        if not user or not check_password_hash(user.password_hash, password):
-            return jsonify({"error": "Invalid username or password"}), 401
-        
-        # Generate JWT token
-        token = jwt.encode({
-            'user_id': user.user_id,
-            'exp': datetime.utcnow() + timedelta(hours=24)  # Token valid for 24 hours
-        }, 'your_secret_key', algorithm='HS256')
-        
-        return jsonify({"message": "Login successful", "token": token}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 
 # Run the app
