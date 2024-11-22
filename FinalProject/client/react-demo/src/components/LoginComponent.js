@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { useRouter } from "next/router"
 
 const LoginComponent = () => {
+    const router = useRouter()
+
     const [credentials, setCredentials] = useState({
         email: '',
         password: '',
@@ -32,6 +35,14 @@ const LoginComponent = () => {
                 throw new Error(result.message || 'Failed to log in');
             }
 
+            const newToken = response.token;
+            if (!newToken) {
+                throw new Error('Token is invalid');
+            }
+
+            //put token in client local storage
+            sessionStorage.setItem("token", newToken);
+
             setMessage({ type: 'success', text: 'Login successful!' });
 
             // Clear the form after submission
@@ -41,8 +52,9 @@ const LoginComponent = () => {
             });
 
             console.log('User logged in:', result);
-
-            //TODO: maybe set session state stuff
+            
+            //redirect user to the home page
+            router.push('/');
         } catch (error) {
             console.error('Error logging in:', error);
             setMessage({ type: 'error', text: error.message || 'An error occurred.' });

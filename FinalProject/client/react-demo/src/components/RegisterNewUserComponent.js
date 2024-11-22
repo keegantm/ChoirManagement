@@ -1,14 +1,16 @@
 import {useState} from 'react'
+import { useRouter } from 'next/router'
 
 
 const RegisterNewUserComponent = () => {
+    const router = useRouter()
+
     const [newUser, setNewUser] = useState({
         email: '',
         password: ''
     });
 
     const [message, setMessage] = useState(null);
-
 
     const handleInputChange = (e) => {
         //name is name of the input field
@@ -29,8 +31,6 @@ const RegisterNewUserComponent = () => {
                 },
                 body: JSON.stringify(newUser),
             });
-            //TODO: Check if username (email) is in member. 
-            //If not in member, or that username already has a password then send an error/fail msg
 
             if (!response.ok) {
                 throw new Error('Failed to add new member');
@@ -46,6 +46,8 @@ const RegisterNewUserComponent = () => {
                 email: '',
                 password: ''
             });
+
+            router.push('/login');
         } catch (error) {
             console.error('Error registering:', error);
             setMessage({ type: 'error', text: error.message || 'An error occurred.' });
