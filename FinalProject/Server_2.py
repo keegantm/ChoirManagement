@@ -2,19 +2,25 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-#import datetime
 from sqlalchemy.sql import text
-from pytz import timezone
 import jwt
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
-from datetime import datetime
 from pytz import timezone
+import os
+from dotenv import load_dotenv
 
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+
+
+# Load environment variables from a .env file
+load_dotenv()
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY is not set in the environment")
 
 # Configuring the SQLAlchemy Database URI 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/ChoirDatabase'
@@ -123,110 +129,164 @@ class Budget(db.Model):
     budget_date_set = db.Column(db.Date, nullable=False)
     budget_amount = db.Column(db.Numeric(12, 2), nullable=False)  
 
-'''
-TODOS
-- Create a new database class User, for Milad's Login and Register endpoints
-- Modify the /register endpoint:
-    Verify that the recieved username (an email) exists as an email in
-    the Members table. If none exist, throw an error
--Modify the /login endpoint:
-    We need a way to insert what permissions a user has into the token.
-    For now, we have these permissions:
-        canEditMusicalRoles
-        canEditBoardRoles
-        canAddMembers
-        canChangeActiveStatus
-        isAttendanceManager
-        canViewFinancialData
 
-    These permissions are dependent on the roles that the user logging in has
+# Define a User model 
+class User(db.Model):
     
-    canEditMusicalRoles is TRUE for: Accompanist, Director, BassSectionLeader, TenorSectionLeader, AltoSectionLeader, SopranoSectionLeader
-    canEditBoardRoles is TRUE for: BoardMember, Treasurer, President
-    canAddMembers is TRUE for any role-holder right now. 
-    canChangeActiveStatus is TRUE for  any role-holder right now. 
-    isAttendanceManager is TRUE for  any role-holder right now. 
-    canViewFinancialData is TRUE for : BoardMember, Treasurer, President
+    __tablename__ = 'User'  
 
-    So for each user, once we've determined that they can be logged in:
-    - Find their row in the member table, to get their member_id (use the shared unique username for this join)
-    - Get the role_type of each row where they appear in the Role table
-    - If that role grants them special permissions, set that permission to = True. 
-    - Create the token
+    # Table columns
+    user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(100), unique=True, nullable=False)  # Email as the username
+    password_hash = db.Column(db.String(255), nullable=False)  # Store hashed passwords
 
-    The token creation will probably look like a longer version of this:
-    
-        can_edit_musical_roles = false
-        can_add_members = true
+    def __init__(self, username, password):
+        """
+        create a new User object.
+        Automatically hashes the provided password.
+        
+        Args:
+            username (str): The user's email address.
+            password (str): The user's plaintext password.
+        """
+        self.username = username
+        self.password_hash = generate_password_hash(password) # Securely hash the password
 
-        (logic + queries to determine if the user is one of these roles: Accompanist, Director, BassSectionLeader, TenorSectionLeader, AltoSectionLeader, SopranoSectionLeader)
-
-        token = jwt.encode({
-            'user_id': user.user_id,
-            'canEditMusicalRoles': can_edit_musical_roles,
-            'canAddMembers' : can_add_members,
-            'exp': datetime.utcnow() + timedelta(hours=24)  # Token valid for 24 hours
-        }, 'your_secret_key', algorithm='HS256')
-
-One more task for login is the creation and storage of a secret key. 
-Where it currently says 'your_secret_key' in the code, we need to 
-replace that with a secret key stored in a .env file
-
-'''
+    def verify_password(self, password):
+        """
+        Verifies if the provided password matches the stored hashed password.
+        
+        Args:
+            password (str): The plaintext password to verify.
+        
+        Returns:
+            bool: True if the password matches, False otherwise.
+        """
+        return check_password_hash(self.password_hash, password)
 
 
-# Endpoints 
-@app.route('/', methods=['GET'])
-def return_home():
-    return jsonify({'message': 'Welcome to the Choir Home Page!'}) # Return a welcome message for the home page
 
+# Create Endpoints to interact with Frontend
 
-# added by milad
+"""
+    Register a new user after verifying their email exists in the Member table.
+
+"""
 @app.route('/register', methods=['POST'])
 def register():
     try:
         data = request.json
-        #username will be an email
-        username = data.get('username')
-        password = data.get('password')
-        
-        # Check if the user already exists
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            return jsonify({"error": "User already exists"}), 400
-        
-        # Create new user
-        new_user = User(
-            username=username,
-            password_hash=generate_password_hash(password)
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        return jsonify({"message": "User registered successfully"}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        username = data.get('username')  # User's email
+        password = data.get('password')  # Plaintext password
 
+        # Input validation
+        if not username or not password:
+            return jsonify({"error": "Username and password are required"}), 400
+
+        # Check if the username exists in the Members table
+        member = Member.query.filter_by(email=username).first()
+        if not member:  # If the email does not exist in the Member table, return an error
+            return jsonify({"error": "Your email was not verified"}), 400
+
+        # Check if the user already exists in the User table
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:  # If the email already exists in the User table, return an error
+            return jsonify({"error": "User already exists"}), 400
+
+        # Create a new user
+        new_user = User(
+            username=username,  # Use the email as the username
+            password_hash=generate_password_hash(password)  # Hash the password securely
+        )
+        db.session.add(new_user)  # Add the new user to the database session
+        db.session.commit()  # Commit the transaction
+
+        return jsonify({"message": "User registered successfully"}), 201
+
+    except IntegrityError:  # Handle database integrity issues
+        db.session.rollback()  # Rollback any partial transaction
+        return jsonify({"error": "A user with this email already exists"}), 400
+
+    except Exception as e:  # Handle unexpected exceptions
+        app.logger.error(f"Error in register endpoint: {str(e)}")  # Log the error for debugging
+        return jsonify({"error": "An error occurred during registration"}), 500
+
+    
+"""
+
+    Authenticate a user, assign permissions based on roles, and generate a JWT token.
+
+"""
 @app.route('/login', methods=['POST'])
 def login():
     try:
         data = request.json
-        username = data.get('username')
-        password = data.get('password')
-        
-        # Find user in database
+        username = data.get('username')  # User's email
+        password = data.get('password')  # Plain text password
+
+        # Input validation
+        if not username or not password:
+            return jsonify({"error": "Username and password are required"}), 400
+
+        # Find user in the database
         user = User.query.filter_by(username=username).first()
         if not user or not check_password_hash(user.password_hash, password):
             return jsonify({"error": "Invalid username or password"}), 401
-        
-        # Generate JWT token
+
+        # Fetch the corresponding member row from the Member table
+        member = Member.query.filter_by(email=username).first()
+        if not member:
+            return jsonify({"error": "No associated member found in the Member table"}), 404
+
+        # Retrieve the user's roles from the Role table
+        roles = Role.query.filter_by(member_id=member.member_id).all()
+
+        # Initialize permissions (default all to False)
+        permissions = {
+            'canEditMusicalRoles': False,
+            'canEditBoardRoles': False,
+            'canAddMembers': False,
+            'canChangeActiveStatus': False,
+            'isAttendanceManager': False,
+            'canViewFinancialData': False
+        }
+
+        # Define role-based permission mappings
+        musical_roles = ['Accompanist', 'Director', 'BassSectionLeader', 'TenorSectionLeader', 'AltoSectionLeader', 'SopranoSectionLeader']
+        board_roles = ['BoardMember', 'Treasurer', 'President']
+
+        # Assign permissions based on the user's roles
+        for role in roles:
+            if role.role_type in musical_roles:
+                permissions['canEditMusicalRoles'] = True
+            if role.role_type in board_roles:
+                permissions['canEditBoardRoles'] = True
+                permissions['canViewFinancialData'] = True
+            # These permissions are universal for all role-holders
+            permissions['canAddMembers'] = True
+            permissions['canChangeActiveStatus'] = True
+            permissions['isAttendanceManager'] = True
+
+         # Generate JWT token with Eastern Time expiration
+        eastern = timezone('US/Eastern')  # Define Eastern Timezone
         token = jwt.encode({
             'user_id': user.user_id,
-            'exp': datetime.utcnow() + timedelta(hours=24)  # Token valid for 24 hours
-        }, 'your_secret_key', algorithm='HS256')
-        
+            'member_id': member.member_id,
+            **permissions,
+            'exp': datetime.now(eastern) + timedelta(hours=24)  # Eastern Time expiration
+        }, SECRET_KEY, algorithm='HS256')
+
         return jsonify({"message": "Login successful", "token": token}), 200
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"Error in login endpoint: {str(e)}")
+        return jsonify({"error": "An error occurred during login"}), 500
+    
+
+
+@app.route('/', methods=['GET'])
+def return_home():
+    return jsonify({'message': 'Welcome to the Choir Home Page!'}) # Return a welcome message for the home page
 
 
 '''
@@ -250,7 +310,9 @@ def getUserPermissions():
         return jsonify(permissions)
 
     except Exception as e:
-        print(str(e))
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({"error": "Internal server error. Please try again later."}), 500
+
 
 '''
 Get all currently active members
@@ -375,8 +437,9 @@ def updateExistingRole():
         # Return the data as JSON
         return jsonify(updated_role_info)
     except Exception as e:
-        print(str(e))
-        return jsonify({"error": str(e)}), 400
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({"error": "Internal server error. Please try again later."}), 500
+
 
 '''
 Given a roleId, delete the row from the table
@@ -406,8 +469,9 @@ def deleteRoleRow():
         return jsonify(updated_role_info)
 
     except Exception as e:
-        print(str(e))
-        return jsonify({"error": str(e)}), 400
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({"error": "Internal server error. Please try again later."}), 500
+
 
 
 '''
@@ -454,8 +518,9 @@ def assignNewRole():
         return jsonify({'status' : 'successful add row'})
 
     except Exception as e:
-        print(str(e))
-        return jsonify({"error": str(e)}), 400
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({"error": "Internal server error. Please try again later."}), 500
+
 
 '''
 Return all entries from the voiceparts table, where the member is Active
@@ -488,8 +553,9 @@ def getActiveVoiceParts():
         return jsonify(data), 200
 
     except Exception as e:
-        print(str(e))
-        return jsonify({"error": str(e)}), 400
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({"error": "Internal server error. Please try again later."}), 500
+
 
 
 '''
@@ -543,8 +609,9 @@ def deleteVoicePart():
         return jsonify(updated_role_info)
 
     except Exception as e:
-        print(str(e))
-        return jsonify({"error": str(e)}), 400
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({"error": "Internal server error. Please try again later."}), 500
+
 
 '''
 Given a voice_part_id, and a voice_part, update the voice_part of 
@@ -578,8 +645,9 @@ def updateExistingVoicePart():
         # Return the data as JSON
         return jsonify(updated_part_info)
     except Exception as e:
-        print(str(e))
-        return jsonify({"error": str(e)}), 400
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({"error": "Internal server error. Please try again later."}), 500
+
 
 
 '''
@@ -668,8 +736,9 @@ def setInactiveMember():
 
         return (jsonify({'member_id' : member_id}))
     except Exception as e:
-        print(str(e))
-        return jsonify({"error": str(e)}), 400        
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({"error": "Internal server error. Please try again later."}), 500
+     
 
 
 '''
@@ -705,7 +774,9 @@ def setBudget():
     try:
         return
     except Exception as e:
-        print(str(e))
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({"error": "Internal server error. Please try again later."}), 500
+
 
 '''
 Return a SUM of the payments between two input dates.
@@ -794,8 +865,9 @@ def addMember():
         print("Empty Field Error")
         return jsonify({'message': str(e)}), 400
     except Exception as e:
-        print(str(e))
-        return jsonify({"error": str(e)}), 400
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({"error": "Internal server error. Please try again later."}), 500
+
 
 # Records an attendance entry for a member's practice session.
 @app.route('/addAttendance', methods=['POST'])
