@@ -13,7 +13,24 @@ function manageMembers() {
         canChangeActiveStatus: false
     });
 
+    const [activeMembers, setActiveMembers] = useState([]);
     const [roleOptions, setRoleOptions] = useState([]);
+
+    const fetchActiveMembers = async () => {
+        try {
+            // Fetch active members
+            const memberResponse = await fetch('http://localhost:8080/getActiveMembers');
+            if (!memberResponse.ok) {
+                throw new Error('Failed to fetch active members');
+            }
+
+            const memberData = await memberResponse.json();
+            setActiveMembers(memberData);
+            console.log("FETCHED MEMBER DATA IN PARENT:", memberData);  // Log the fetched active members if needed
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    };
 
     useEffect(() => {
         // Fetch the user's permissions from the backend
@@ -21,6 +38,9 @@ function manageMembers() {
             .then(response => response.json())
             .then(data => { console.log(data)
                             setPermissions(data)});
+        
+        //get the active members of the choir
+        fetchActiveMembers();
     }, []);
 
 
@@ -75,14 +95,16 @@ function manageMembers() {
 
             <h2>Manage Member Roles:</h2>
 
-            <RoleManagerComponent roleOptions={roleOptions}  />
+            {activeMembers.length > 0 && (
+                <RoleManagerComponent roleOptions={roleOptions} members={activeMembers} />
+            )}
             
             {permissions.canEditMusicalRoles && (
-                <VoicePartComponent></VoicePartComponent>
+                <VoicePartComponent members={activeMembers}></VoicePartComponent>
             )}
 
             {permissions.canAddMembers && (
-                <AddMemberComponent></AddMemberComponent>
+                <AddMemberComponent onNewMember={fetchActiveMembers}></AddMemberComponent>
             )}
 
         </div>

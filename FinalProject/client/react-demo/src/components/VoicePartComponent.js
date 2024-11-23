@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 
-const VoicePartComponent = () => {
+const VoicePartComponent = (props) => {
     const voiceOptions = [
         'Bass',
         'Tenor',
         'Soprano',
         'Alto'
     ]
+
+    const { members } = props;
+
 
     // State for role assignments and active members
     const [loadedVoiceParts, setLoadedVoiceParts] = useState([]);
@@ -27,7 +30,7 @@ const VoicePartComponent = () => {
                 const voiceData = await voiceResponse.json();
                 setLoadedVoiceParts(voiceData);
                 
-    
+                /*
                 // Fetch active members
                 const memberResponse = await fetch('http://localhost:8080/getActiveMembers');
                 if (!memberResponse.ok) {
@@ -37,13 +40,15 @@ const VoicePartComponent = () => {
                 const memberData = await memberResponse.json();
                 setActiveMembers(memberData);
                 console.log(memberData);  // Log the fetched active members if needed
+                */
+               setActiveMembers(members)
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         };
     
         fetchData();
-    }, []);
+    }, [members]);
     
 
     // Handle role change

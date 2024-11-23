@@ -2,7 +2,7 @@ import {useState} from 'react'
 
 
 
-const AddMemberComponent = () => {
+const AddMemberComponent = ({onNewMember}) => {
 
 
     const [newMember, setNewMember] = useState({
@@ -64,6 +64,7 @@ const AddMemberComponent = () => {
                 setMessage({ type: 'success', text: result.message });
                 console.log(result.message)
                 resetForm();
+                onNewMember();
             }
 
         } catch (error) {

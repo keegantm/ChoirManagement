@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 
 const RoleManagerComponent = (props) => {
-    const { roleOptions } = props;
+    const { roleOptions, members } = props;
+
+    console.log("IN ROLE MANAGER members are :", members)
+    console.log("IN ROLE MANAGER role options are:", roleOptions)
 
     // State for role assignments and active members
     const [loadedRoles, setLoadedRoles] = useState([]);
     const [activeMembers, setActiveMembers] = useState([]);
-
-
+    
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -28,7 +30,8 @@ const RoleManagerComponent = (props) => {
                     const roleData = await roleResponse.json();
                     setLoadedRoles(roleData);
                 }
-    
+                
+                /*
                 // Fetch active members
                 const memberResponse = await fetch('http://localhost:8080/getActiveMembers');
                 if (!memberResponse.ok) {
@@ -38,13 +41,15 @@ const RoleManagerComponent = (props) => {
                 const memberData = await memberResponse.json();
                 setActiveMembers(memberData);
                 console.log(memberData);  // Log the fetched active members if needed
+                */
+               setActiveMembers(members)
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         };
     
         fetchData();
-    }, [roleOptions]);
+    }, [roleOptions, members]);
     
 
     // Handle role change
@@ -69,24 +74,7 @@ const RoleManagerComponent = (props) => {
                 setLoadedRoles(loadedRoles.map(role =>
                     role.role_id === roleId ? { ...role, role_type: newRoleType } : role
                 ));
-                
-
-                /*
-                fetch('http://localhost:8080/updateExistingRole', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ role_id: roleId, role_type: newRoleType })
-                })
-                .then(response => response.json())
-                .then(() => {
-                    setLoadedRoles(loadedRoles.map(role =>
-                        role.role_id === roleId ? { ...role, role_type: newRoleType } : role
-                    ));
-                })
-                .catch(error => console.error("Error updating role:", error));
-                */
+            
                 
             }
             catch (error) {
