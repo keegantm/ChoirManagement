@@ -132,9 +132,7 @@ class Budget(db.Model):
 
 # Define a User model 
 class User(db.Model):
-    
     __tablename__ = 'User'  
-
     # Table columns
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(100), unique=True, nullable=False)  # Email as the username
@@ -144,7 +142,6 @@ class User(db.Model):
         """
         create a new User object.
         Automatically hashes the provided password.
-        
         Args:
             username (str): The user's email address.
             password (str): The user's plaintext password.
@@ -155,15 +152,12 @@ class User(db.Model):
     def verify_password(self, password):
         """
         Verifies if the provided password matches the stored hashed password.
-        
         Args:
             password (str): The plaintext password to verify.
-        
         Returns:
             bool: True if the password matches, False otherwise.
         """
         return check_password_hash(self.password_hash, password)
-
 
 
 # Create Endpoints to interact with Frontend
