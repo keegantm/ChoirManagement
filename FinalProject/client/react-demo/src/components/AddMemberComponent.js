@@ -3,6 +3,8 @@ import {useState} from 'react'
 
 
 const AddMemberComponent = ({onNewMember}) => {
+ 
+    const [message, setMessage] = useState(null);
 
 
     const [newMember, setNewMember] = useState({
@@ -31,7 +33,6 @@ const AddMemberComponent = ({onNewMember}) => {
         });
     }
 
-    const [message, setMessage] = useState(null);
 
 
     const handleInputChange = (e) => {

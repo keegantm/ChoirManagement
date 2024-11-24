@@ -2,10 +2,13 @@ import members from '@/pages/members';
 import React, { useEffect, useState } from 'react';
 
 
-const ManagePotentiallyInactiveMembers = () => {
+const ManagePotentiallyInactiveMembers = (props) => {
+
+    const { updateActiveMembers, pInactiveMembers} = props;
 
     const [displayedMembers, setDisplayedMembers] = useState([])
 
+    /*
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -25,6 +28,10 @@ const ManagePotentiallyInactiveMembers = () => {
         }
         fetchData();
     }, [])
+    */
+   useEffect( () => {
+        setDisplayedMembers(pInactiveMembers)
+   }, [pInactiveMembers])
 
     const handleSetInactive = async (member_id) => {
         try {
@@ -46,9 +53,18 @@ const ManagePotentiallyInactiveMembers = () => {
             console.log("Displayed members:", displayedMembers);
 
             setDisplayedMembers(displayedMembers.filter(member => member.member_id != changedData.member_id));
+            updateActiveMembers()
         } catch (error) {
             console.error("Error setting a member as inactive");
         }
+    }
+
+    if (displayedMembers.length === 0) {
+        return (
+            <div>
+                <p>No members are flagged as potentially inactive</p>
+            </div>
+        )
     }
 
     return (

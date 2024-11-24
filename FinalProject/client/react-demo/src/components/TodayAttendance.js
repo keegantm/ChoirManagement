@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
 const TodayAttendance = (props) => {
-    const { members, reasons } = props;
+    const { members, reasons, fetchPInactiveMembers} = props;
+    const [message, setMessage] = useState(null);
 
     //need to store additional info about each member
     //if they are present, absence reason, and any additional notes about the absence
@@ -75,10 +76,17 @@ const TodayAttendance = (props) => {
                 )
             );
             
+            const allSuccess = responses.every((response) => response.ok);
             const results = await Promise.all(responses.map((res) => res.json()));
-
             console.log(results)
-
+            
+            if (allSuccess) {
+                setMessage({ type: 'success', text: "Attendance Taken" });
+                fetchPInactiveMembers();
+            }
+            else {
+                setMessage({ type: 'error', text: "Error taking attendance" });
+            }
         }
         catch (error){
             console.error("Error adding a attendance record:", error);
@@ -97,6 +105,11 @@ const TodayAttendance = (props) => {
     return (
         <div>
             <h2>Attendance</h2>
+            {message && (
+                <div className={`alert ${message.type}`}>
+                    {message.text}
+                </div>
+            )}
             <table>
                 <thead>
                     <tr>
