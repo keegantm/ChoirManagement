@@ -234,10 +234,10 @@ def login():
         if not member:
             return jsonify({"error": "No associated member found in the Member table"}), 404
 
+        '''
         # Retrieve the user's roles from the Role table
         roles = Role.query.filter_by(member_id=member.member_id).all()
 
-        
         # Initialize permissions (default all to False)
         permissions = {
             'canEditMusicalRoles': False,
@@ -263,7 +263,7 @@ def login():
             permissions['canAddMembers'] = True
             permissions['canChangeActiveStatus'] = True
             permissions['isAttendanceManager'] = True
-        
+        '''
 
          # Generate JWT token with Eastern Time expiration
         eastern = timezone('US/Eastern')  # Define Eastern Timezone
@@ -280,7 +280,7 @@ def login():
         app.logger.error(f"Error in login endpoint: {str(e)}")
         return jsonify({"error": "An error occurred during login"}), 500
 '''
-Based on an input member Id, return their 
+Based on an input JWT, return a member's 
 role based permissions
 
 '''
@@ -289,6 +289,7 @@ def permissions():
     try:
         #recieves a JWT. 
         token = request.json
+        #verify the token using the secret key
         #verify that the Token is valid based on its expiration value. If it is not, then throw an error
 
         #get the member ID from the token
