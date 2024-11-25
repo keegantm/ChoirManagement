@@ -6,7 +6,7 @@ const RegisterNewUserComponent = () => {
     const router = useRouter()
 
     const [newUser, setNewUser] = useState({
-        email: '',
+        username: '',
         password: ''
     });
 
@@ -24,7 +24,7 @@ const RegisterNewUserComponent = () => {
 
     const handleSubmit = async () => {
         try {
-            const response = await fetch('http://localhost:8080/registerNewUser', {
+            const response = await fetch('http://localhost:8080/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -32,18 +32,26 @@ const RegisterNewUserComponent = () => {
                 body: JSON.stringify(newUser),
             });
 
+            const result = await response.json();
+
             if (!response.ok) {
-                throw new Error('Failed to add new member');
+                if (response.status === 400) {
+                    
+                    setMessage({ type: 'error', text: result.error });
+                    return;
+                }
+                else {
+                    throw new Error('Failed to add new member');
+                }
             }
 
-            const result = await response.json();
             console.log('User registered:', result);
 
             setMessage({ type: 'success', text: 'User registered successfully!' });
             
             // Clear the form after submission
             setNewUser({
-                email: '',
+                username: '',
                 password: ''
             });
 
@@ -62,12 +70,13 @@ const RegisterNewUserComponent = () => {
                     {message.text}
                 </div>
             )}
+
             <div>
                 <label>Email</label>
                 <input
                     type="email"
-                    name="email"
-                    value={newUser.email}
+                    name="username"
+                    value={newUser.username}
                     onChange={handleInputChange}
                 />
 

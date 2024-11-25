@@ -5,7 +5,7 @@ const LoginComponent = () => {
     const router = useRouter()
 
     const [credentials, setCredentials] = useState({
-        email: '',
+        username: '',
         password: '',
     });
 
@@ -32,10 +32,17 @@ const LoginComponent = () => {
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to log in');
+                if (response.status === 400 || response.status === 401 || response.status === 404) {
+                    
+                    setMessage({ type: 'error', text: result.error });
+                    return;
+                }
+                else {
+                    throw new Error(result.message || 'Failed to log in');
+                }
             }
 
-            const newToken = response.token;
+            const newToken = result.token;
             if (!newToken) {
                 throw new Error('Token is invalid');
             }
@@ -47,7 +54,7 @@ const LoginComponent = () => {
 
             // Clear the form after submission
             setCredentials({
-                email: '',
+                username: '',
                 password: '',
             });
 
@@ -73,8 +80,8 @@ const LoginComponent = () => {
                 <label>Email</label>
                 <input
                     type="email"
-                    name="email"
-                    value={credentials.email}
+                    name="username"
+                    value={credentials.username}
                     onChange={handleInputChange}
                 />
 

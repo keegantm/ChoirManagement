@@ -146,8 +146,10 @@ class User(db.Model):
             username (str): The user's email address.
             password (str): The user's plaintext password.
         """
+        hashed_password = generate_password_hash(password)
+
         self.username = username
-        self.password_hash = generate_password_hash(password) # Securely hash the password
+        self.password_hash = hashed_password # Securely hash the password
 
     def verify_password(self, password):
         """
@@ -189,8 +191,8 @@ def register():
 
         # Create a new user
         new_user = User(
-            username=username,  # Use the email as the username
-            password_hash=generate_password_hash(password)  # Hash the password securely
+            username=username,  # Use the email as the username 
+            password=password  # Hash the password securely CHANGED: now the User constructor hashes the password
         )
         db.session.add(new_user)  # Add the new user to the database session
         db.session.commit()  # Commit the transaction
@@ -235,6 +237,7 @@ def login():
         # Retrieve the user's roles from the Role table
         roles = Role.query.filter_by(member_id=member.member_id).all()
 
+        
         # Initialize permissions (default all to False)
         permissions = {
             'canEditMusicalRoles': False,
@@ -260,13 +263,14 @@ def login():
             permissions['canAddMembers'] = True
             permissions['canChangeActiveStatus'] = True
             permissions['isAttendanceManager'] = True
+        
 
          # Generate JWT token with Eastern Time expiration
         eastern = timezone('US/Eastern')  # Define Eastern Timezone
         token = jwt.encode({
             'user_id': user.user_id,
             'member_id': member.member_id,
-            **permissions,
+            #**permissions,  #REMOVE THIS
             'exp': datetime.now(eastern) + timedelta(hours=24)  # Eastern Time expiration
         }, SECRET_KEY, algorithm='HS256')
 
@@ -275,7 +279,29 @@ def login():
     except Exception as e:
         app.logger.error(f"Error in login endpoint: {str(e)}")
         return jsonify({"error": "An error occurred during login"}), 500
-    
+'''
+Based on an input member Id, return their 
+role based permissions
+
+'''
+@app.route('/permissions', methods=['POST'])
+def permissions(): 
+    try:
+        #recieves a JWT. 
+        token = request.json
+        #verify that the Token is valid based on its expiration value. If it is not, then throw an error
+
+        #get the member ID from the token
+        member_id = token.member_id #not sure about the syntax, probably something like this
+
+        #verify the member Id is valid. Throw an error if it isn't
+
+        #build the user's permissions based on their roles. Same as in /login
+
+    except Exception as e:
+        app.logger.error(f"Error in login endpoint: {str(e)}")
+        return jsonify({"error": "An error occurred during login"}), 500
+
 
 
 @app.route('/', methods=['GET'])
