@@ -1,13 +1,16 @@
+/*
+Home page of the website
+*/
+
 import React, {useEffect, useState} from 'react'
 import NavBar from '../components/NavBar.js'
 
 
 function index() {
 
-
+  //message displayed, from backend
   const [message, setMessage] = useState("Loading");
-
-
+  
   useEffect(() => {
     //connect to python server, hosted on 8080
     fetch("http://localhost:8080/").then( //once there's a response:

@@ -1,6 +1,7 @@
-//imports
+/*
+File for the page holding the login component
+*/
 import Link from 'next/link';
-
 import LoginComponent from "@/components/LoginComponent";
 import NavBar from '@/components/NavBar';
 

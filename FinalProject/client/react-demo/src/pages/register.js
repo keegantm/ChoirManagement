@@ -1,3 +1,6 @@
+/*
+File for the page holding the register component
+*/
 const { default: RegisterNewUserComponent } = require("@/components/RegisterNewUserComponent");
 import Link from 'next/link';
 

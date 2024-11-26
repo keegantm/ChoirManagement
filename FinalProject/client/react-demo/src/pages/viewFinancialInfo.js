@@ -1,17 +1,19 @@
+/*
+Page to view the financial information about the choir
+*/
 import {useEffect, useState} from 'react'
 import NavBar from '../components/NavBar.js'
 import ViewBudget from '@/components/ViewBudget';
 import ViewPaymentInfo from '@/components/ViewPaymentInfo.js';
 
 function viewFinancialInfo() {
-
+    
+    //the logged in user's permissions
     const [permissions, setPermissions] = useState({
-        canEditMusicalRoles: false,
-        canEditBoardRoles: false,
-        canAddMembers: false,
-        canChangeActiveStatus: false
+        canViewFinancialData: false
     });
 
+    /*
     useEffect(() => {
         // Fetch the user's permissions from the backend
         fetch('http://localhost:8080/getUserPermissions')
@@ -19,13 +21,21 @@ function viewFinancialInfo() {
             .then(data => { console.log(data)
                             setPermissions(data)});
     }, []);
+    */
+
+    
 
     return (
         <div>
             <NavBar />
 
-            <ViewBudget></ViewBudget>
-            <ViewPaymentInfo></ViewPaymentInfo>
+            {permissions.canViewFinancialData && (
+                <ViewBudget></ViewBudget>
+            )}
+
+            {permissions.canViewFinancialData && (
+                <ViewPaymentInfo></ViewPaymentInfo>
+            )}
         </div>
 
     );

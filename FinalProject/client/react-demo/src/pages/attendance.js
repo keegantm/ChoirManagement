@@ -1,3 +1,10 @@
+/*
+Page for attendance-based actions
+
+Allows the user to manage potentially inactive members,
+and to take attendance for today
+*/
+
 import ManagePotentiallyInactiveMembers from "@/components/ManagePotentiallyInactiveMembers";
 import NavBar from "@/components/NavBar";
 import TodayAttendance from "@/components/TodayAttendance";
@@ -5,17 +12,20 @@ import { useEffect, useState } from "react";
 
 function attendance( ) {
 
+    //permissions used to conditionally render elements depending on the logged in user's roles
     const [permissions, setPermissions] = useState({
-        canEditMusicalRoles: false,
-        canEditBoardRoles: false,
         canAddMembers: false,
         canChangeActiveStatus: false
     });
 
+    //active members of the choir
     const [activeMembers, setActiveMembers] = useState([])
+    //list of absence reasons
     const [absenceReasons, setAbsenceReasons] = useState([])
+    //potentially inactive choir members
     const [pInactiveMembers, setPInactiveMembers] = useState([])
 
+    //retrieve all active choir members
     const fetchActiveMembers = async () => {
         try {
             const memberResponse = await fetch('http://localhost:8080/getActiveMembers')
@@ -33,6 +43,7 @@ function attendance( ) {
         }
     }
 
+    //retrieve all potentially inactive members, (members who missed all 5 of the most recent practices)
     const fetchPInactiveMembers = async () => {
         try {
             const membersResponse = await fetch('http://localhost:8080/retrievePotentiallyInactiveMembers');
@@ -50,6 +61,7 @@ function attendance( ) {
         }
     }
 
+    //on page load, retrieve absence reasons, active members, and potentially inactive members
     useEffect(() => {
         //get user permissions
         fetch('http://localhost:8080/getUserPermissions')
