@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    h1 {
+        @apply 
+        text-2xl
+        tracking-wider
+    }
+
+}
 
 .alert {
     padding: 15px;

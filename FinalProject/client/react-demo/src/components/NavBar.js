@@ -31,36 +31,35 @@ const NavBar = () => {
         console.log("Logged in")
 
         return (
-            <nav>
-            <Link href="/">Home</Link>
-            <br></br>
-            <Link href="/manageMembers">Member Management</Link>
-            <br></br>
-            <Link href="/attendance">Attendance</Link>
-            <br></br>
-            <Link href="/viewFinancialInfo">View Financial Information</Link>
-            <br></br>
-            <button onClick={handleLogout}>Logout</button>
-            <br></br>
-            </nav>
+            <div className="flex px-8 py-6 bg-slate-50">
+                <h1 className="mr-16">Portland Community Choir</h1>
+
+                <nav className="flex  gap-3  flex-wrap  ml-auto">
+                    <Link href="/" >Home</Link>
+                    <Link href="/manageMembers" className="block py-2 px-4 tracking-wide hover:bg-slate-200 rounded">Member Management</Link>
+                    <Link href="/attendance" className="block py-2 px-4 tracking-wide hover:bg-slate-200 rounded">Attendance</Link>
+                    <Link href="/viewFinancialInfo" className="block py-2 px-4 tracking-wide hover:bg-slate-200 rounded">View Financial Information</Link>
+                    <button onClick={handleLogout} className="block py-2 px-4 tracking-wide hover:bg-slate-200 rounded">Logout</button>
+                </nav>
+            </div>
+
         )
     }
     else {
         console.log("Not Logged in")
 
         return (
-            <nav>
-                <Link href="/">Home</Link>
-                <br></br>
-                <Link href="/manageMembers">Member Management</Link>
-                <br></br>
-                <Link href="/attendance">Attendance</Link>
-                <br></br>
-                <Link href="/viewFinancialInfo">View Financial Information</Link>
-                <br></br>
-                <Link href="/login">Login</Link>
-                <br></br>
-            </nav>
+            <div className="flex px-8 py-6 bg-slate-50">
+                <h1 className="mr-16">Portland Community Choir</h1>
+                <nav className="flex  gap-3  flex-wrap  ml-auto">
+                    <Link href="/" className="block py-2 px-4 tracking-wide hover:bg-slate-200 rounded">Home</Link>
+                    <Link href="/manageMembers" className="block py-2 px-4 tracking-wide hover:bg-slate-200 rounded">Member Management</Link>
+                    <Link href="/attendance" className="block py-2 px-4 tracking-wide hover:bg-slate-200 rounded">Attendance</Link>
+                    <Link href="/viewFinancialInfo" className="block py-2 px-4 tracking-wide hover:bg-slate-200 rounded">View Financial Information</Link>
+                    <Link href="/login" className="block py-2 px-4 tracking-wide hover:bg-slate-200 rounded">Login</Link>
+                </nav>
+            </div>
+
 
         )
     }
