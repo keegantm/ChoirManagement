@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
+/*
+Component for a user to manage the voice parts in the choir
+*/
 const VoicePartComponent = (props) => {
     const voiceOptions = [
         'Bass',
@@ -8,18 +11,18 @@ const VoicePartComponent = (props) => {
         'Alto'
     ]
 
+    //active members of the choir
     const { members } = props;
 
-
-    // State for role assignments and active members
+    //loaded voice parts + member joins
     const [loadedVoiceParts, setLoadedVoiceParts] = useState([]);
+    //active choir members
     const [activeMembers, setActiveMembers] = useState([]);
 
-
+    //when we recieve active members, get voice parts and set our state variables
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch voice assignments
                 const voiceResponse = await fetch('http://localhost:8080/getActiveVoiceParts')
 
                 if (!voiceResponse.ok) {
@@ -70,6 +73,8 @@ const VoicePartComponent = (props) => {
 
                 const changedData = await handleVoicePartChangeResponse.json();
                 console.log(changedData);
+
+                //update displayed voice parts
                 setLoadedVoiceParts(loadedVoiceParts.map(part =>
                     part.voice_part_id === id ? { ...part, voice_part: newVoicePart } : part
                 ));
@@ -132,7 +137,6 @@ const VoicePartComponent = (props) => {
             const result = await handleAddVoicePart.json();
             console.log(result)
 
-            // Fetch voice assignments
             const voiceResponse = await fetch('http://localhost:8080/getActiveVoiceParts')
 
             if (!voiceResponse.ok) {
@@ -147,11 +151,10 @@ const VoicePartComponent = (props) => {
     }
     };
 
-    // Only render if roleOptions are defined and have items
+    //only render if we have all the required info
     if (!loadedVoiceParts || loadedVoiceParts.length === 0) {
         return <div>Loading Voice Parts...</div>;
     }
-
     if (!activeMembers || activeMembers.length === 0) {
         return <div>Loading Members...</div>
     }

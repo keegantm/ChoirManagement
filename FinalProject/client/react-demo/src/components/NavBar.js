@@ -1,10 +1,15 @@
 import Link from 'next/link';
 import {useEffect, useState} from 'react'
 
+/*
+Logic for the NavBar at the top of the page
+*/
 const NavBar = () => {
 
+    //change what is displayed, depending on if the user is logged in
     const [loggedIn, setLoggedIn] = useState(false)
 
+    //when the user logs out, clear their token
     function handleLogout() {
         sessionStorage.clear();
         //make the component reload
@@ -14,14 +19,14 @@ const NavBar = () => {
     //only get the token once the page has loaded, otherwise the browser
     //does not exist
     useEffect(() => {
-        const token = sessionStorage.getItem("token"); // Get token from session storage
+        const token = sessionStorage.getItem("token"); //get token from session storage
 
+        //check if the user is logged in
         if (token && token !== "" && token !== undefined) {
             setLoggedIn(true);
         }
     }, []);
 
-    //get if the user is logged in
     if (loggedIn){
         console.log("Logged in")
 

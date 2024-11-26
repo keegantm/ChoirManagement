@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
 
+/*
+Component for taking today's attendance
+*/
 const TodayAttendance = (props) => {
+    //members are active choir members
+    //reasons are absence reasons
+    //fetchPInactiveMembers is call to parent to check for potentially inactive members after attendance is taken
     const { members, reasons, fetchPInactiveMembers} = props;
+
     const [message, setMessage] = useState(null);
 
     //need to store additional info about each member
@@ -94,10 +101,10 @@ const TodayAttendance = (props) => {
 
     };
 
+    //if we have no information, do not load
     if (!members || members.length === 0) {
         return <div>No Members Loaded...</div>;
     }
-
     if (!reasons || reasons.length === 0) {
         return <div>No Absence Reasons Loaded...</div>
     }

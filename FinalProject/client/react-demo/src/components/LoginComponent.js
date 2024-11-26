@@ -1,3 +1,6 @@
+/*
+Component for a user to login
+*/
 import { useState } from 'react';
 import { useRouter } from "next/router"
 
@@ -9,8 +12,9 @@ const LoginComponent = () => {
         password: '',
     });
 
-    const [message, setMessage] = useState(null); // For success/error messages
+    const [message, setMessage] = useState(null); // For success/error message
 
+    //update credentials when the user types
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setCredentials((prev) => ({
@@ -18,7 +22,7 @@ const LoginComponent = () => {
             [name]: value,
         }));
     };
-
+    
     const handleSubmit = async () => {
         try {
             const response = await fetch('http://localhost:8080/login', {
@@ -41,7 +45,8 @@ const LoginComponent = () => {
                     throw new Error(result.message || 'Failed to log in');
                 }
             }
-
+            
+            //get user's JWT
             const newToken = result.token;
             if (!newToken) {
                 throw new Error('Token is invalid');
@@ -52,7 +57,7 @@ const LoginComponent = () => {
 
             setMessage({ type: 'success', text: 'Login successful!' });
 
-            // Clear the form after submission
+            //clear form
             setCredentials({
                 username: '',
                 password: '',

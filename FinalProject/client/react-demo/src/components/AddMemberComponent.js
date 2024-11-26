@@ -1,12 +1,15 @@
+/*
+Component for adding a new member to the choir
+*/
+
 import {useState} from 'react'
 
-
-
 const AddMemberComponent = ({onNewMember}) => {
- 
+
+    //success/fail msg
     const [message, setMessage] = useState(null);
 
-
+    //form to send to backend
     const [newMember, setNewMember] = useState({
         first_name: '',
         last_name: '',
@@ -19,6 +22,7 @@ const AddMemberComponent = ({onNewMember}) => {
         postal_code: ''
     });
 
+    //on submit, reset the form
     const resetForm = () => {
         setNewMember({
             first_name: '',
@@ -33,8 +37,7 @@ const AddMemberComponent = ({onNewMember}) => {
         });
     }
 
-
-
+    //update form when the user types
     const handleInputChange = (e) => {
         //name is name of the input field
         //value is what the user typed
@@ -45,6 +48,7 @@ const AddMemberComponent = ({onNewMember}) => {
         }));
     };
 
+    
     const handleSubmit = async () => {
         try {
             const response = await fetch('http://localhost:8080/addMember', {
@@ -65,6 +69,7 @@ const AddMemberComponent = ({onNewMember}) => {
                 setMessage({ type: 'success', text: result.message });
                 console.log(result.message)
                 resetForm();
+                //update the parent component about a new member
                 onNewMember();
             }
 

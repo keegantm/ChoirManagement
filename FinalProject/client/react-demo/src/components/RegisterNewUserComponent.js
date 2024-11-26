@@ -1,7 +1,9 @@
 import {useState} from 'react'
 import { useRouter } from 'next/router'
 
-
+/*
+Component for registering a new User of the site
+*/
 const RegisterNewUserComponent = () => {
     const router = useRouter()
 

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 
-
-
+/*
+Component for showing the sum of payments towards the budget, and what the current balance is
+*/
 const ViewPaymentInfo = () => {
     const [sum, setSum] = useState(0)
     const [budget, setBudget] = useState({ budget_amount: 0.00, budget_date_set: '' })
     const [difference, setDifference] = useState(null);
     
+    //on load, get the budget and sum of payments
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -49,6 +51,7 @@ const ViewPaymentInfo = () => {
         fetchData();
     }, [])
 
+    //when we have the sum, calculate the budget difference
     useEffect(() => {
 
         if (sum !== 0 || budget.budget_amount !== 0) {

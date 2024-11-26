@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 
+/*
+Component for viewing the budget
+*/
 const ViewBudget = () => {
     const [displayedBudget, setDisplayedBudget] = useState({ budget_amount: 0.00, budget_date_set: '' })
 

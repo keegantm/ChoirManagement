@@ -1,11 +1,15 @@
-import members from '@/pages/members';
 import React, { useEffect, useState } from 'react';
 
-
+/*
+Component for viewing members who may be inactive, and setting them to inactive
+*/
 const ManagePotentiallyInactiveMembers = (props) => {
 
+    //updateActiveMembers is callback to parent, when a member is set as inactive
+    //pInactiveMembers is a list of potentially inactive members
     const { updateActiveMembers, pInactiveMembers} = props;
 
+    //members displayed by this prop
     const [displayedMembers, setDisplayedMembers] = useState([])
 
     /*
@@ -29,12 +33,15 @@ const ManagePotentiallyInactiveMembers = (props) => {
         fetchData();
     }, [])
     */
-   useEffect( () => {
-        setDisplayedMembers(pInactiveMembers)
-   }, [pInactiveMembers])
 
+    //on page load, display the potentially inactive members
+    useEffect( () => {
+        setDisplayedMembers(pInactiveMembers)
+    }, [pInactiveMembers])
+    
     const handleSetInactive = async (member_id) => {
         try {
+            //change member to be inactive
             const setInactive = await fetch('http://localhost:8080/setInactiveMember', {
                 method: 'POST',
                 headers: {
@@ -42,7 +49,6 @@ const ManagePotentiallyInactiveMembers = (props) => {
                 },
                 body: JSON.stringify({member_id:member_id})
             });
-
 
             if (!setInactive.ok) {
                 throw new Error('Failed to set the member as inactive');
