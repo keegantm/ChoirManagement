@@ -9,6 +9,34 @@
         tracking-wider
     }
 
+    h2 {
+        @apply 
+        text-lg
+        tracking-wide
+    }
+    
+    .body {
+        @apply
+        my-4
+        mx-auto
+        flex
+        flex-col
+       /* bg-slate-200*/   
+        max-w-lg        
+        w-full
+    }
+
+    .component {
+        @apply
+        mb-4
+        flex
+        flex-col
+        bg-slate-100
+        max-w-full
+        p-4
+        rounded
+    }
+
 }
 
 .alert {

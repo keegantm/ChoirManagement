@@ -65,32 +65,36 @@ const RegisterNewUserComponent = () => {
     };
 
     return (
-        <div>
-            <h3>Create your account</h3>
+        <div className="shadow-lg rounded bg-slate-100 border slate-700 grid justify-center gap-4 mx-16 my-8 min px-8 py-8 max-w-4xl ">
+            <h2>Create your account</h2>
             {message && (
                 <div className={`alert ${message.type}`}>
                     {message.text}
                 </div>
             )}
 
-            <div>
+            <div className="flex flex-grow flex-col justify-start w-full">
                 <label>Email</label>
                 <input
                     type="email"
                     name="username"
                     value={newUser.username}
                     onChange={handleInputChange}
+                    className="border slate-700"
+
                 />
 
-                <label>Password:</label>
+                <label className='mt-2'>Password:</label>
                 <input
                     type="password"
                     name="password"
                     value={newUser.password}
                     onChange={handleInputChange}
+                    className="border slate-700"
+
                 />
 
-                <button onClick={handleSubmit}>Register</button>
+                <button onClick={handleSubmit} className="border slate-700 bg-gradient-to-r from-cyan-100 to-blue-100 mt-4" >Register</button>
             </div>
         </div>
     );

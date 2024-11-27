@@ -44,7 +44,7 @@ const NavBar = () => {
         console.log("Logged in")
 
         return (
-            <div className="flex px-8 py-6 bg-slate-50">
+            <div className="border slate-700 shadow-sm flex px-8 py-6 bg-slate-50 ">
                 <h1 className="mr-16">Portland Community Choir</h1>
 
                 <nav className="flex  gap-3  flex-wrap  ml-auto">
@@ -62,7 +62,7 @@ const NavBar = () => {
         console.log("Not Logged in")
 
         return (
-            <div className="flex px-8 py-6 bg-slate-50">
+            <div className="border slate-700 shadow-sm flex px-8 py-6 bg-slate-50">
                 <h1 className="mr-16">Portland Community Choir</h1>
 
                 <nav className="flex  gap-3  flex-wrap  ml-auto">

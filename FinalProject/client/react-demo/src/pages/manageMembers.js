@@ -157,19 +157,21 @@ function manageMembers() {
         <div>
             <NavBar />
 
-            <h2>Manage Member Roles:</h2>
+            <div className="body">
 
-            {activeMembers.length > 0 && (
-                <RoleManagerComponent roleOptions={roleOptions} members={activeMembers} fetchPermissions={fetchAndSetPermissions}/>
-            )}
-            
-            {permissions.canEditMusicalRoles && (
-                <VoicePartComponent members={activeMembers}></VoicePartComponent>
-            )}
+                {activeMembers.length > 0 && (
+                    <RoleManagerComponent roleOptions={roleOptions} members={activeMembers} fetchPermissions={fetchAndSetPermissions}/>
+                )}
+                
+                {permissions.canEditMusicalRoles && (
+                    <VoicePartComponent members={activeMembers}></VoicePartComponent>
+                )}
 
-            {permissions.canAddMembers && (
-                <AddMemberComponent onNewMember={fetchActiveMembers}></AddMemberComponent>
-            )}
+                {permissions.canAddMembers && (
+                    <AddMemberComponent onNewMember={fetchActiveMembers}></AddMemberComponent>
+                )}
+                
+            </div>
 
         </div>
         

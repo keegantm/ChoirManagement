@@ -3,6 +3,7 @@ Component for a user to login
 */
 import { useState } from 'react';
 import { useRouter } from "next/router"
+import Link from 'next/link';
 
 const LoginComponent = () => {
     const router = useRouter()
@@ -74,32 +75,37 @@ const LoginComponent = () => {
     };
 
     return (
-        <div>
-            <h3>Log In</h3>
+        <div className="shadow-lg rounded bg-slate-100 border slate-700 grid justify-center gap-4 mx-16 my-8 min px-8 py-8 max-w-4xl ">
+            <h2>Log In</h2>
             {message && (
                 <div className={`alert ${message.type}`}>
                     {message.text}
                 </div>
             )}
-            <div>
-                <label>Email</label>
+            <div className="flex flex-grow flex-col justify-start w-full">
+                <label>Email:</label>
                 <input
                     type="email"
                     name="username"
                     value={credentials.username}
                     onChange={handleInputChange}
+                    className="border slate-700"
                 />
 
-                <label>Password:</label>
+                <label className="mt-2">Password:</label>
                 <input
                     type="password"
                     name="password"
                     value={credentials.password}
                     onChange={handleInputChange}
+                    className="border slate-700"
                 />
 
-                <button onClick={handleSubmit}>Log In</button>
+                <button onClick={handleSubmit} className="border slate-700 bg-gradient-to-r from-cyan-100 to-blue-100 mt-4 w-full" >Log In</button>
             </div>
+
+            <Link href="/register" className="border slate-700 block bg-gradient-to-r from-cyan-100 to-blue-100 text-center">Register</Link>
+
         </div>
     );
 };

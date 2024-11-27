@@ -14,7 +14,7 @@ import { useRouter } from 'next/router'
 
 function attendance( ) {
     const router = useRouter()
-    
+
     //permissions used to conditionally render elements depending on the logged in user's roles
     const [permissions, setPermissions] = useState({
         canAddMembers: false,
@@ -117,18 +117,20 @@ function attendance( ) {
     return (
         <div>
             <NavBar/>
-            
-            <h2>Attendance</h2>
+            <div className="body">
+                <h2>Attendance</h2>
 
-            {permissions.canChangeActiveStatus && (
-                <ManagePotentiallyInactiveMembers updateActiveMembers={fetchActiveMembers} pInactiveMembers={pInactiveMembers}></ManagePotentiallyInactiveMembers>
-            )}
-
-            {activeMembers.length > 0 && absenceReasons.length > 0 && permissions.isAttendanceManager ?(
-                <TodayAttendance members={activeMembers} reasons={absenceReasons} fetchPInactiveMembers={fetchPInactiveMembers}/>
-                ):(
-                    <div>Loading Active Members and Absence Reasons...</div>
+                {permissions.canChangeActiveStatus && (
+                    <ManagePotentiallyInactiveMembers updateActiveMembers={fetchActiveMembers} pInactiveMembers={pInactiveMembers}></ManagePotentiallyInactiveMembers>
                 )}
+
+                {activeMembers.length > 0 && absenceReasons.length > 0 && permissions.isAttendanceManager ?(
+                    <TodayAttendance members={activeMembers} reasons={absenceReasons} fetchPInactiveMembers={fetchPInactiveMembers}/>
+                    ):(
+                        <div>Loading Active Members and Absence Reasons...</div>
+                    )}
+                
+            </div>
 
         </div>
     )

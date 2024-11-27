@@ -176,8 +176,8 @@ const RoleManagerComponent = (props) => {
     }
 
     return (
-        <div>
-            <h3>Manage Roles</h3>
+        <div className="component border slate-700">
+            <h2 className="mb-2">Manage Role Assignments</h2>
 
             <table>
                 <thead>
@@ -209,7 +209,7 @@ const RoleManagerComponent = (props) => {
                 </tbody>
             </table>
 
-            <h3>Add a New Role Assignment</h3>
+            <h2 className='mt-4 mb-2'>Add a New Role Assignment</h2>
             <div>
                 <label>Member: </label>
                 <select id="newMemberSelect">
