@@ -6,7 +6,7 @@ Component for managing what roles members of the chorus have
 const RoleManagerComponent = (props) => {
     //roleOptions is a list of roles this user can manage
     //members is a list of active members of the choir
-    const { roleOptions, members } = props;
+    const { roleOptions, members, fetchPermissions } = props;
 
     console.log("IN ROLE MANAGER members are :", members)
     console.log("IN ROLE MANAGER role options are:", roleOptions)
@@ -81,7 +81,8 @@ const RoleManagerComponent = (props) => {
             setLoadedRoles(loadedRoles.map(role =>
                 role.role_id === roleId ? { ...role, role_type: newRoleType } : role
             ));
-        
+
+            fetchPermissions()
             
         }
         catch (error) {
@@ -109,7 +110,8 @@ const RoleManagerComponent = (props) => {
             const changedData = await handleDeleted.json();
             console.log(changedData);
             setLoadedRoles(loadedRoles.filter(role => role.role_id !== roleId));
- 
+            
+            fetchPermissions()
         }
         catch (error) {
             console.error("Error fetching data in handleDeleteRole:", error);
@@ -155,6 +157,8 @@ const RoleManagerComponent = (props) => {
 
             const roleData = await roleResponse.json();
             setLoadedRoles(roleData);
+
+            fetchPermissions()
         }
         catch (error){
             console.error("Error adding a role assignment:", error);

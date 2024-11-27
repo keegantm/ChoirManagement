@@ -9,13 +9,16 @@ import ManagePotentiallyInactiveMembers from "@/components/ManagePotentiallyInac
 import NavBar from "@/components/NavBar";
 import TodayAttendance from "@/components/TodayAttendance";
 import { useEffect, useState } from "react";
+import { fetchPermissions } from '@/utils/fetchPermissions.js';
+import { useRouter } from 'next/router'
 
 function attendance( ) {
-
+    const router = useRouter()
+    
     //permissions used to conditionally render elements depending on the logged in user's roles
     const [permissions, setPermissions] = useState({
         canAddMembers: false,
-        canChangeActiveStatus: false
+        isAttendanceManager: false
     });
 
     //active members of the choir
@@ -61,15 +64,38 @@ function attendance( ) {
         }
     }
 
+    const fetchAndSetPermissions = async () => {
+        const token = sessionStorage.getItem("token");
+        if (token && token !== "" && token !== undefined) {
+            //get permissions
+            const permissionsResponse = await fetchPermissions(token, router);
+            if (permissionsResponse) {
+                setPermissions(permissionsResponse)
+            }
+            else {
+                setPermissions({
+                    canAddMembers: false,
+                    isAttendanceManager: false
+                })
+            }
+        }
+        else {
+            router.push("/login")
+        }
+    }
+
     //on page load, retrieve absence reasons, active members, and potentially inactive members
     useEffect(() => {
+        fetchAndSetPermissions();
+
+        /*
         //get user permissions
         fetch('http://localhost:8080/getUserPermissions')
             .then(response => response.json())
             .then(data => { console.log(data)
                             setPermissions(data)
             });
-        
+        */
         /*
         fetch('http://localhost:8080/getActiveMembers')
             .then(response => response.json())
@@ -98,7 +124,7 @@ function attendance( ) {
                 <ManagePotentiallyInactiveMembers updateActiveMembers={fetchActiveMembers} pInactiveMembers={pInactiveMembers}></ManagePotentiallyInactiveMembers>
             )}
 
-            {activeMembers.length > 0 && absenceReasons.length > 0 ? (
+            {activeMembers.length > 0 && absenceReasons.length > 0 && permissions.isAttendanceManager ?(
                 <TodayAttendance members={activeMembers} reasons={absenceReasons} fetchPInactiveMembers={fetchPInactiveMembers}/>
                 ):(
                     <div>Loading Active Members and Absence Reasons...</div>

@@ -13,8 +13,11 @@ import { useRouter } from 'next/router'
 import RoleManagerComponent from '@/components/RoleManagerComponent.js';
 import VoicePartComponent from '@/components/VoicePartComponent.js';
 import AddMemberComponent from '@/components/AddMemberComponent.js';
- 
+import { fetchPermissions } from '@/utils/fetchPermissions.js';
+
+
 function manageMembers() {
+    const router = useRouter();
 
     //permissions used to conditionally render elements depending on the logged in user's roles
     const [permissions, setPermissions] = useState({
@@ -27,7 +30,7 @@ function manageMembers() {
     const [activeMembers, setActiveMembers] = useState([]);
     //the roles this user can manage
     const [roleOptions, setRoleOptions] = useState([]);
-
+    
     const fetchActiveMembers = async () => {
         try {
             const memberResponse = await fetch('http://localhost:8080/getActiveMembers');
@@ -43,64 +46,15 @@ function manageMembers() {
         }
     };
     
-    //on page load, retrieve active members 
-    useEffect(() => {
-        /*
-        // Fetch the user's permissions from the backend
-        fetch('http://localhost:8080/getUserPermissions')
-            .then(response => response.json())
-            .then(data => { console.log(data)
-                            setPermissions(data)});
-        */
-        //get the active members of the choir
-        fetchActiveMembers();
-    }, []);
-
-    
-    //on page load, get user authorizations
-    useEffect( async () => {
+    const fetchPermissionsOld = async () => {
         try {
-            /*
-            const token = sessionStorage.getItem("token"); // Get token from session storage
-            
-            //see if the user is logged in
+            const token = sessionStorage.getItem("token");
             if (token && token !== "" && token !== undefined) {
+
                 const decoded = jwtDecode(token)
                 console.log(decoded);
-                
-                if (!decoded) {
-                    throw Error("Failure to decode token");
-                }
-
-                const currentTime = Math.floor(Date.now() * 0.001)
-                const exp = decoded.exp;
-
-                //see if the token is expired
-                if (currentTime >= exp) {
-                    //token is expired
-                    console.log("EXPIRED TOKEN")
-                    sessionStorage.clear();
-                    router.push('/login');
-                };
-
-                //get permissions from token
-                setPermissions({
-                    canEditMusicalRoles: decoded.canEditMusicalRoles,
-                    canEditBoardRoles: decoded.canEditBoardRoles,
-                    canAddMembers: decoded.canAddMembers,
-                });
-            }
-            else {
-                //user not logged in, send to login screen
-                router.push('/login');
-            }
-        }
-            */
-            if (token && token !== "" && token !== undefined) {
-                const decoded = jwtDecode(token)
-                console.log(decoded);
-
-                //pass member id to endpoint with the token
+    
+                //token to backend (contains member_id)
                 const permissionsResponse = await fetch("http://localhost:8080/permissions", {
                     method: 'POST',
                     headers: {
@@ -110,19 +64,20 @@ function manageMembers() {
                 
                 if (!permissionsResponse.ok) {
                     console.log("Error getting user permissions")
-
+    
                     //give user all False permissions
                     return;
                 }
-
+    
                 const data = await permissionsResponse.json()
+                const permissions = data.permissions
+                console.log("PERMISSIONS SET :", permissions)
 
                 setPermissions({
-                    canEditMusicalRoles: data.canEditMusicalRoles || False,
-                    canEditBoardRoles: data.canEditBoardRoles || False,
-                    canAddMembers: data.canAddMembers || False,
+                    canEditMusicalRoles: permissions.canEditMusicalRoles || false,
+                    canEditBoardRoles: permissions.canEditBoardRoles || false,
+                    canAddMembers: permissions.canAddMembers || false,
                 });
-
                 
             }
             else {
@@ -133,6 +88,35 @@ function manageMembers() {
         catch (Error) {
             console.error("Error retrieving permissions :", Error)
         };
+    }
+    
+    const fetchAndSetPermissions = async () => {
+        const token = sessionStorage.getItem("token");
+        if (token && token !== "" && token !== undefined) {
+            //get permissions
+            const permissionsResponse = await fetchPermissions(token, router);
+            if (permissionsResponse) {
+                setPermissions(permissionsResponse)
+            }
+            else {
+                setPermissions({
+                    canEditMusicalRoles: false,
+                    canEditBoardRoles: false,
+                    canAddMembers: false,
+                })
+            }
+        }
+        else {
+            router.push("/login")
+        }
+    }
+
+    //on page load, retrieve active members and permissions
+    useEffect(() => {
+
+        fetchAndSetPermissions();
+        //get the active members of the choir
+        fetchActiveMembers();
 
     }, []);
     
@@ -176,7 +160,7 @@ function manageMembers() {
             <h2>Manage Member Roles:</h2>
 
             {activeMembers.length > 0 && (
-                <RoleManagerComponent roleOptions={roleOptions} members={activeMembers} />
+                <RoleManagerComponent roleOptions={roleOptions} members={activeMembers} fetchPermissions={fetchAndSetPermissions}/>
             )}
             
             {permissions.canEditMusicalRoles && (
@@ -193,5 +177,5 @@ function manageMembers() {
 
     }
 
-    export default manageMembers
+    export default manageMembers;
     

@@ -5,8 +5,11 @@ import {useEffect, useState} from 'react'
 import NavBar from '../components/NavBar.js'
 import ViewBudget from '@/components/ViewBudget';
 import ViewPaymentInfo from '@/components/ViewPaymentInfo.js';
+import { fetchPermissions } from '@/utils/fetchPermissions.js';
+import { useRouter } from 'next/router'
 
 function viewFinancialInfo() {
+    const router = useRouter()
     
     //the logged in user's permissions
     const [permissions, setPermissions] = useState({
@@ -23,7 +26,28 @@ function viewFinancialInfo() {
     }, []);
     */
 
-    
+    const fetchAndSetPermissions = async () => {
+        const token = sessionStorage.getItem("token");
+        if (token && token !== "" && token !== undefined) {
+            //get permissions
+            const permissionsResponse = await fetchPermissions(token, router);
+            if (permissionsResponse) {
+                setPermissions(permissionsResponse)
+            }
+            else {
+                setPermissions({
+                    canViewFinancialData: false,
+                })
+            }
+        }
+        else {
+            router.push("/login")
+        }
+    }
+
+    useEffect(() => {
+        fetchAndSetPermissions();
+    }, [])
 
     return (
         <div>

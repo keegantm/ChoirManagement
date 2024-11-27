@@ -207,12 +207,12 @@ def register():
         app.logger.error(f"Error in register endpoint: {str(e)}")  # Log the error for debugging
         return jsonify({"error": "An error occurred during registration"}), 500
 
-    
+
 """
 
     Authenticate a user, assign permissions based on roles, and generate a JWT token.
 
-"""
+
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -277,7 +277,107 @@ def login():
     except Exception as e:
         app.logger.error(f"Error in login endpoint: {str(e)}")
         return jsonify({"error": "An error occurred during login"}), 500
-    
+"""
+"""
+    Retrieve and construct user permissions dynamically based on roles using a provided JWT.
+
+"""
+#Permission endpoint
+@app.route('/permissions', methods=['POST'])
+def permissions():
+    try:
+        # Receive JWT from request
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({"error": "Token is required"}), 400
+
+        # Decode the JWT to get user data
+        decoded_token = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        member_id = decoded_token.get('member_id')
+        if not member_id:
+            return jsonify({"error": "Invalid token"}), 401
+
+
+        # Define role-based permission mappings
+        permissions = {
+            'canEditMusicalRoles': False,
+            'canEditBoardRoles': False,
+            'canAddMembers': False,
+            'canChangeActiveStatus': False,
+            'isAttendanceManager': False,
+            'canViewFinancialData': False,
+        }
+
+        # Fetch roles from the Role table for the member
+        roles = Role.query.filter_by(member_id=member_id).all()
+        if not roles:
+            return jsonify({"permissions": permissions}), 200
+
+        musical_roles = ['Accompanist', 'Director', 'BassSectionLeader', 'TenorSectionLeader', 'AltoSectionLeader', 'SopranoSectionLeader']
+        board_roles = ['BoardMember', 'Treasurer', 'President']
+
+        for role in roles:
+            if role.role_type in musical_roles:
+                permissions['canEditMusicalRoles'] = True
+            if role.role_type in board_roles:
+                permissions['canEditBoardRoles'] = True
+                permissions['canViewFinancialData'] = True
+            permissions['canAddMembers'] = True
+            permissions['canChangeActiveStatus'] = True
+            permissions['isAttendanceManager'] = True
+
+        return jsonify({"permissions": permissions}), 200
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token has expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+    except Exception as e:
+        print(f"Error in permissions endpoint: {str(e)}")
+        app.logger.error(f"Error in permissions endpoint: {str(e)}")
+        return jsonify({"error": "An error occurred"}), 500
+
+
+"""
+Authenticate the user and generate a JWT token with basic user information.
+
+"""
+
+# Login Endpoint
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.json
+        username = data.get('username')  # User's email
+        password = data.get('password')  # Plain text password
+
+        # Input validation
+        if not username or not password:
+            return jsonify({"error": "Username and password are required"}), 400
+
+        # Find user in the database
+        user = User.query.filter_by(username=username).first()
+        if not user or not user.verify_password(password):
+            return jsonify({"error": "Invalid username or password"}), 401
+
+        # Fetch the corresponding member row from the Member table
+        member = Member.query.filter_by(email=username).first()
+        if not member:
+            return jsonify({"error": "No associated member found in the Member table"}), 404
+
+        # Generate JWT token
+        eastern = timezone('US/Eastern')  # Define Eastern Timezone
+        token = jwt.encode({
+            'user_id': user.user_id,
+            'member_id': member.member_id,
+            'exp': datetime.now(eastern) + timedelta(hours=24)  # Eastern Time expiration
+        }, SECRET_KEY, algorithm='HS256')
+
+        return jsonify({"message": "Login successful", "token": token}), 200
+
+    except Exception as e:
+        app.logger.error(f"Error in login endpoint: {str(e)}")
+        return jsonify({"error": "An error occurred during login"}), 500
 
 @app.route('/', methods=['GET'])
 def return_home():
