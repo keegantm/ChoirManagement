@@ -13,14 +13,19 @@ const TodayAttendance = (props) => {
 
     //need to store additional info about each member
     //if they are present, absence reason, and any additional notes about the absence
-    const [attendance, setAttendance] = useState(
-        members.map((member) => ({
-            member_id: member.member_id,
-            present: true,
-            notes: '',
-            absence_reason_id: undefined
-        }))
-    );
+    const [attendance, setAttendance] = useState([]);
+
+    //use input members to set attendance
+    useEffect(() => {
+        setAttendance(
+            members.map((member) => ({
+                member_id: member.member_id,
+                present: true,
+                notes: '',
+                absence_reason_id: undefined
+            }))
+        );
+    }, [members]);
 
     //update the checkbox selection for this member
     const handleCheckboxChange = (index) => {
@@ -109,10 +114,19 @@ const TodayAttendance = (props) => {
             </div>
         )
     }
+    
     if (!reasons || reasons.length === 0) {
         return (
             <div className="component">
                 <h2>No absence reasons found.</h2>
+            </div>
+        )
+    }
+
+    if (!attendance || attendance.length === 0) {
+        return (
+            <div className="component">
+                <h2>Initializing attendance ... </h2>
             </div>
         )
     }

@@ -129,13 +129,12 @@ function attendance( ) {
 
                 {activeMembers.length > 0 && absenceReasons.length > 0 && (
                     permissions.isAttendanceManager ? (
-                            <TodayAttendance members={activeMembers} reasons={absenceReasons} fetchPInactiveMembers={fetchPInactiveMembers}/>
-                        ):  
-                        (
-                            <div className="component">
-                                <h2>You do not have permission to take attendance</h2>
-                            </div>
-                        )
+                        <TodayAttendance members={activeMembers} reasons={absenceReasons} fetchPInactiveMembers={fetchPInactiveMembers}/>
+                    ):(
+                        <div className="component">
+                            <h2>You do not have permission to take attendance</h2>
+                        </div>
+                    )
                 )}
                 
                 
