@@ -67,32 +67,32 @@ const ManagePotentiallyInactiveMembers = (props) => {
 
     if (displayedMembers.length === 0) {
         return (
-            <div>
-                <p>No members are flagged as potentially inactive</p>
+            <div className="component">
+                <h2>No members are flagged as potentially inactive.</h2>
             </div>
         )
     }
 
     return (
-        <div>
-            <h3>Members Who May Be Inactive</h3>
-            <p>As of this page loading, these members have not been to the last five practices</p>
-            <table>
+        <div className="component">
+            <h2>Potentially Inactive Choir Members</h2>
+            <p className="mb-2">These members have not attended the last five practices.</p>
+            <table className="content-table">
                 <thead>
                     <tr>
-                        <th>Member Name</th>
-                        <th>Action</th>
+                        <th className='table-col-header'>Member Name</th>
+                        <th className='table-col-header'>Action</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {displayedMembers.map(member => (
                         <tr key={member.member_id}>
-                            <td>
+                            <td className="table-cell">
                                 {member.first_name} {member.last_name}
                             </td>
-                            <td>
-                                <button onClick={() => handleSetInactive(member.member_id)}>Set Inactive</button>
+                            <td className="table-cell">
+                                <button className="table-button" onClick={() => handleSetInactive(member.member_id)}>Set Inactive</button>
                             </td>
                         </tr>
                     ))}

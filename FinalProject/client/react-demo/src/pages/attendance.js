@@ -118,17 +118,26 @@ function attendance( ) {
         <div>
             <NavBar/>
             <div className="body">
-                <h2>Attendance</h2>
 
-                {permissions.canChangeActiveStatus && (
+                {permissions.canChangeActiveStatus ? (
                     <ManagePotentiallyInactiveMembers updateActiveMembers={fetchActiveMembers} pInactiveMembers={pInactiveMembers}></ManagePotentiallyInactiveMembers>
+                ) : (
+                    <div className="component">
+                        <h2>You do not have permission to manage potentially inactive members</h2>
+                    </div>
                 )}
 
-                {activeMembers.length > 0 && absenceReasons.length > 0 && permissions.isAttendanceManager ?(
-                    <TodayAttendance members={activeMembers} reasons={absenceReasons} fetchPInactiveMembers={fetchPInactiveMembers}/>
-                    ):(
-                        <div>Loading Active Members and Absence Reasons...</div>
-                    )}
+                {activeMembers.length > 0 && absenceReasons.length > 0 && (
+                    permissions.isAttendanceManager ? (
+                            <TodayAttendance members={activeMembers} reasons={absenceReasons} fetchPInactiveMembers={fetchPInactiveMembers}/>
+                        ):  
+                        (
+                            <div className="component">
+                                <h2>You do not have permission to take attendance</h2>
+                            </div>
+                        )
+                )}
+                
                 
             </div>
 

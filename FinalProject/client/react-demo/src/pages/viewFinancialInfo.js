@@ -53,13 +53,21 @@ function viewFinancialInfo() {
         <div>
             <NavBar />
 
-            {permissions.canViewFinancialData && (
-                <ViewBudget></ViewBudget>
-            )}
+            <div className="body">
 
-            {permissions.canViewFinancialData && (
-                <ViewPaymentInfo></ViewPaymentInfo>
-            )}
+                {permissions.canViewFinancialData ? (
+                    <ViewBudget></ViewBudget>
+                ) : (
+                    <div className="component">
+                        <h2>You do not have permission to view financial data.</h2>
+                    </div>
+                )}
+
+                {permissions.canViewFinancialData && (
+                    <ViewPaymentInfo></ViewPaymentInfo>
+                )}
+            </div>
+
         </div>
 
     );

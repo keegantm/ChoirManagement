@@ -176,22 +176,22 @@ const RoleManagerComponent = (props) => {
     }
 
     return (
-        <div className="component border slate-700">
+        <div className="component">
             <h2 className="mb-2">Manage Role Assignments</h2>
 
-            <table>
+            <table className="content-table">
                 <thead>
                     <tr>
-                        <th>Member Name</th>
-                        <th>Role</th>
-                        <th>Actions</th>
+                        <th className='table-col-header'>Member Name</th>
+                        <th className='table-col-header'>Role</th>
+                        <th className='table-col-header'>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {loadedRoles.map(role => (
                         <tr key={role.role_id}>
-                            <td>{role.first_name} {role.last_name}</td>
-                            <td>
+                            <td className="table-cell">{role.first_name} {role.last_name}</td>
+                            <td className="table-cell">
                                 <select 
                                     value={role.role_type}
                                     onChange={(e) => handleRoleChange(role.role_id, e.target.value)}
@@ -201,33 +201,39 @@ const RoleManagerComponent = (props) => {
                                     ))}
                                 </select>
                             </td>
-                            <td>
-                                <button onClick={() => handleDeleteRole(role.role_id)}>Delete</button>
+                            <td className="table-cell">
+                                <button className="table-button" onClick={() => handleDeleteRole(role.role_id)}>Delete</button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
 
-            <h2 className='mt-4 mb-2'>Add a New Role Assignment</h2>
-            <div>
-                <label>Member: </label>
-                <select id="newMemberSelect">
-                    {activeMembers.map(member => (
-                        <option key={member.member_id} value={member.member_id || "default_id"}>
-                            {member.first_name} {member.last_name}
-                        </option>
-                    ))}
-                </select>
-
-                <label>Role: </label>
-                <select id="newRoleSelect">
-                    {roleOptions.map(option => (
-                        <option key={option} value={option}>{option}</option>
-                    ))}
-                </select>
+            <div className="sub-component">
+                <h2 className='mt-4 mb-2'>Add a New Role Assignment</h2>
                 
-                <button onClick={() => {
+                <div className="grid grid-cols-9 grid-flow-col mb-2">
+                    <label className='col-span-1'>Member: </label>
+                    <select id="newMemberSelect" className='select col-span-5'>
+                        {activeMembers.map(member => (
+                            <option key={member.member_id} value={member.member_id || "default_id"}>
+                                {member.first_name} {member.last_name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="grid grid-cols-9 grid-flow-col mb-2">
+                    <label className="col-span-1">Role: </label>
+                    <select id="newRoleSelect" className='select col-span-5'>
+                        {roleOptions.map(option => (
+                            <option key={option} value={option}>{option}</option>
+                        ))}
+                    </select>
+                </div>
+
+                
+                <button className="component-button " onClick={() => {
                     
                     console.log(document.getElementById('newMemberSelect').value)
                     const memberId = document.getElementById('newMemberSelect').value

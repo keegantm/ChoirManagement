@@ -159,16 +159,31 @@ function manageMembers() {
 
             <div className="body">
 
-                {activeMembers.length > 0 && (
-                    <RoleManagerComponent roleOptions={roleOptions} members={activeMembers} fetchPermissions={fetchAndSetPermissions}/>
-                )}
                 
-                {permissions.canEditMusicalRoles && (
-                    <VoicePartComponent members={activeMembers}></VoicePartComponent>
+                {permissions.canEditBoardRoles || permissions.canEditMusicalRoles ? (
+                    activeMembers.length > 0 && (
+                        <RoleManagerComponent roleOptions={roleOptions} members={activeMembers} fetchPermissions={fetchAndSetPermissions}/>
+                    )
+                ) : (
+                    <div className="component">
+                        <h2>You do not have permission to manage member roles</h2>
+                    </div>
                 )}
 
-                {permissions.canAddMembers && (
+                {permissions.canEditMusicalRoles ? (
+                    <VoicePartComponent members={activeMembers}></VoicePartComponent>
+                ) : (
+                    <div className="component">
+                        <h2>You do not have permission to manage potentially inactive members</h2>
+                    </div>
+                )}
+
+                {permissions.canAddMembers ? (
                     <AddMemberComponent onNewMember={fetchActiveMembers}></AddMemberComponent>
+                ) : (
+                    <div className="component">
+                        <h2>You do not have permission to add new members</h2>
+                    </div>
                 )}
                 
             </div>

@@ -22,7 +22,7 @@
         flex
         flex-col
        /* bg-slate-200*/   
-        max-w-lg        
+        max-w-[880px]     
         w-full
     }
 
@@ -35,7 +35,75 @@
         max-w-full
         p-4
         rounded
+        border border-slate-200
     }
+
+    .sub-component {
+        @apply
+        max-w-full
+        flex
+        flex-col
+    }
+
+    .content-table {
+        @apply
+        bg-white
+        border-collapse 
+        border border-slate-400
+    }
+    
+    .table-col-header {
+        @apply
+        text-left
+        mx-2
+        my-2
+        py-1
+        px-2
+    }
+
+    .table-cell {
+        @apply
+        border-y border-slate-400
+        py-1
+        px-2
+    }
+
+    .table-button {
+        @apply
+        rounded
+        my-1
+        py-1
+        px-2
+        border border-slate-400
+        hover:bg-slate-100
+    }
+
+    .component-button {
+        @apply
+        rounded
+        py-1
+        px-2
+        border border-slate-400
+        hover:bg-slate-200
+        bg-white
+        max-w-96
+        min-w-52
+
+    }
+
+    .select {
+        @apply
+        border border-slate-400
+        p-2
+    }
+
+    .member-input{
+        @apply
+        border border-slate-400
+        px-2
+        py-2
+    }
+
 
 }
 

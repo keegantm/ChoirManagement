@@ -62,11 +62,16 @@ const ViewPaymentInfo = () => {
 
     return(
         <div>
-            <h3>Total payments for this budget: {sum.toFixed(2)}</h3>
+            <div className="component">
+                <p>Total payments for this budget: ${sum.toFixed(2)}</p>
+            </div>
             {difference !== null && (
-                <h3>
-                    Balance: {difference > 0 ? `+${difference.toFixed(2)}` : `${difference.toFixed(2)}`}
-                </h3>
+
+                <div className="component">
+                    <p>
+                        The balance for this budget is: {difference > 0 ? `+${difference.toFixed(2)}` : `${difference.toFixed(2)}`}
+                    </p>
+                </div>
             )}
         </div>
 

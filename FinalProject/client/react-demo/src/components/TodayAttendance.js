@@ -103,27 +103,35 @@ const TodayAttendance = (props) => {
 
     //if we have no information, do not load
     if (!members || members.length === 0) {
-        return <div>No Members Loaded...</div>;
+        return (
+            <div className="component">
+                <h2>No active members found.</h2>
+            </div>
+        )
     }
     if (!reasons || reasons.length === 0) {
-        return <div>No Absence Reasons Loaded...</div>
+        return (
+            <div className="component">
+                <h2>No absence reasons found.</h2>
+            </div>
+        )
     }
 
     return (
-        <div>
-            <h2>Attendance</h2>
+        <div className="component">
+            <h2 className="mb-2">Today's Attendance</h2>
             {message && (
                 <div className={`alert ${message.type}`}>
                     {message.text}
                 </div>
             )}
-            <table>
+            <table className='content-table'>
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Present</th>
-                        <th>Reason</th>
-                        <th>Absence Notes</th>
+                        <th className='table-col-header'>Name</th>
+                        <th className='table-col-header'>Present</th>
+                        <th className='table-col-header'>Reason</th>
+                        <th className='table-col-header'>Absence Notes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -131,16 +139,16 @@ const TodayAttendance = (props) => {
                     {members.map((member, index) => (
                         <tr key={member.member_id}>
                             {/*member name*/}
-                            <td>{member.first_name} {member.last_name}</td>
+                            <td className="table-cell">{member.first_name} {member.last_name}</td>
                             {/*checkbox indicating if they are present*/}
-                            <td>
+                            <td className="table-cell">
                                 <input
                                     type="checkbox"
                                     checked={attendance[index].present} 
                                     onChange={() => handleCheckboxChange(index)}
                                 />
                             </td>
-                            <td>
+                            <td className="table-cell">
                                 {/*if absent, allow them to select an absence reason*/}
                                 <select
                                     value={attendance[index].absence_reason_id  || -1}
@@ -164,7 +172,7 @@ const TodayAttendance = (props) => {
                                     ))}
                                 </select>
                             </td>
-                            <td>
+                            <td className="table-cell">
                                 {/*allow the user to add an aditional comment about the absence*/}
                                 <input
                                     type="text"
@@ -174,13 +182,14 @@ const TodayAttendance = (props) => {
                                         handleNotesChange(index, e.target.value)
                                     }
                                     disabled={attendance[index].present}
+                                    className={`${attendance[index].present ? "bg-slate-100": "bg-white"} border border-slate-400 w-full`}
                                 />
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
-            <button onClick={handleSubmit}>Submit Attendance</button>
+            <button className="component-button mt-4" onClick={handleSubmit}>Submit Attendance</button>
         </div>
     );
 };

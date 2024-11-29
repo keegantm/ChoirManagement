@@ -25,7 +25,11 @@ const ViewBudget = () => {
     }, [])
 
     return(
-        <h3>The most recent budget is {displayedBudget.budget_amount}, set on {displayedBudget.budget_date_set}</h3>
+
+        <div className='component'>
+            <h2>Current Budget :</h2>
+            <p2>The most recent budget is ${displayedBudget.budget_amount}, set on {displayedBudget.budget_date_set}</p2>
+        </div>
     )
 }
 

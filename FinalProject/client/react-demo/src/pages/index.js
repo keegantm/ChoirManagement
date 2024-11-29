@@ -29,7 +29,11 @@ function index() {
   return (
     <div>
       <NavBar></NavBar>
-      {message}
+      <div className='body'>
+        <div className='component'>
+          <h2>Welcome to the Choir Management Portal!</h2>
+        </div>
+      </div>
     </div>
   )
 }

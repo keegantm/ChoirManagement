@@ -160,22 +160,22 @@ const VoicePartComponent = (props) => {
     }
 
     return (
-        <div>
-            <h3>Manage Voice Parts</h3>
+        <div className="component">
+            <h2 className="mb-2">Manage Voice Parts</h2>
 
-            <table>
+            <table className="content-table">
                 <thead>
                     <tr>
-                        <th>Member Name</th>
-                        <th>Voice Part</th>
-                        <th>Actions</th>
+                        <th className='table-col-header'>Member Name</th>
+                        <th className='table-col-header'>Voice Part</th>
+                        <th className='table-col-header'>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {loadedVoiceParts.map(part => (
                         <tr key={part.voice_part_id}>
-                            <td>{part.first_name} {part.last_name}</td>
-                            <td>
+                            <td className="table-cell">{part.first_name} {part.last_name}</td>
+                            <td className="table-cell">
                                 <select 
                                     value={part.voice_part}
                                     onChange={(e) => handleVoicePartChange(part.voice_part_id, e.target.value)}
@@ -185,38 +185,44 @@ const VoicePartComponent = (props) => {
                                     ))}
                                 </select>
                             </td>
-                            <td>
-                                <button onClick={() => handleDeleteVoicePart(part.voice_part_id)}>Delete</button>
+                            <td className="table-cell">
+                                <button  className="table-button" onClick={() => handleDeleteVoicePart(part.voice_part_id)}>Delete</button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+            
+            <div className="sub-component">
+                <h2 className='mt-4 mb-2'>Add a Voice Part Assignment</h2>
 
-            <h3>Add a Voice Part Assignment</h3>
-            <div>
-                <label>Member: </label>
-                <select id="voicePartMemberSelect">
-                    {activeMembers.map(member => (
-                        <option key={member.member_id} value={member.member_id || "default_id"}>
-                            {member.first_name} {member.last_name}
-                        </option>
-                    ))}
-                </select>
-
-                <label>Voice Part: </label>
-                <select id="voicePartSelect">
-                    {voiceOptions.map(option => (
-                        <option key={option} value={option}>{option}</option>
-                    ))}
-                </select>
+                <div className="grid grid-cols-9 grid-flow-col mb-2">
+                    <label className='col-span-1'>Member: </label>
+                    <select id="voicePartMemberSelect" className='select col-span-5'>
+                        {activeMembers.map(member => (
+                            <option key={member.member_id} value={member.member_id || "default_id"}>
+                                {member.first_name} {member.last_name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
                 
-                <button onClick={() => {
+                <div className="grid grid-cols-9 grid-flow-col mb-2">
+                    <label className="col-span-1">Voice Part: </label>
+                    <select id="voicePartSelect" className='select col-span-5'>
+                        {voiceOptions.map(option => (
+                            <option key={option} value={option}>{option}</option>
+                        ))}
+                    </select>
+                </div>    
+
+                <button className="component-button" onClick={() => {
                     
                     const memberId = document.getElementById('voicePartMemberSelect').value
                     const voiceSelection = document.getElementById('voicePartSelect').value;
                     handleAddVoicePart(memberId, voiceSelection);
                 }}>Add Role</button>
+                
             </div>
         </div>
     );
