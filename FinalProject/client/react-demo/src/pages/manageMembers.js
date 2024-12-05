@@ -174,7 +174,7 @@ function manageMembers() {
                     <VoicePartComponent members={activeMembers}></VoicePartComponent>
                 ) : (
                     <div className="component">
-                        <h2>You do not have permission to manage potentially inactive members</h2>
+                        <h2>You do not have permission to manage voice parts</h2>
                     </div>
                 )}
 

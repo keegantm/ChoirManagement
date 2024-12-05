@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-/*
+/* 
 Component for viewing members who may be inactive, and setting them to inactive
 */
 const ManagePotentiallyInactiveMembers = (props) => {
