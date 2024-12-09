@@ -126,3 +126,41 @@ CREATE TABLE User (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp for account creation
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- Timestamp for updates
 );
+
+-- Insert an admin member into the Member table
+INSERT INTO Member (
+    first_name, 
+    last_name, 
+    email, 
+    join_date, 
+    is_active, 
+    address_line_1, 
+    address_line_2, 
+    city, 
+    state, 
+    postal_code
+) VALUES (
+    'AdminFirst', 
+    'AdminLast', 
+    'admin@choir.com', 
+    '2024-01-01', 
+    TRUE, 
+    '123 Admin Lane', 
+    NULL, 
+    'Portland', 
+    'ME', 
+    '04101'
+);
+
+-- Get the member_id of the admin member
+SET @admin_member_id = LAST_INSERT_ID();
+
+-- Insert roles for the admin member in the Role table
+INSERT INTO Role (
+    member_id, 
+    role_type, 
+    salary_amount, 
+    role_start_date
+) VALUES 
+    (@admin_member_id, 'President', 0.00, '2024-01-01'),
+    (@admin_member_id, 'Director', 0.00, '2024-01-01');

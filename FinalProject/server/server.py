@@ -209,78 +209,7 @@ def register():
 
 
 """
-
-    Authenticate a user, assign permissions based on roles, and generate a JWT token.
-
-
-@app.route('/login', methods=['POST'])
-def login():
-    try:
-        data = request.json
-        username = data.get('username')  # User's email
-        password = data.get('password')  # Plain text password
-
-        # Input validation
-        if not username or not password:
-            return jsonify({"error": "Username and password are required"}), 400
-
-        # Find user in the database
-        user = User.query.filter_by(username=username).first()
-        if not user or not check_password_hash(user.password_hash, password):
-            return jsonify({"error": "Invalid username or password"}), 401
-
-        # Fetch the corresponding member row from the Member table
-        member = Member.query.filter_by(email=username).first()
-        if not member:
-            return jsonify({"error": "No associated member found in the Member table"}), 404
-
-        # Retrieve the user's roles from the Role table
-        roles = Role.query.filter_by(member_id=member.member_id).all()
-
-        # Initialize permissions (default all to False)
-        permissions = {
-            'canEditMusicalRoles': False,
-            'canEditBoardRoles': False,
-            'canAddMembers': False,
-            'canChangeActiveStatus': False,
-            'isAttendanceManager': False,
-            'canViewFinancialData': False
-        }
-
-        # Define role-based permission mappings
-        musical_roles = ['Accompanist', 'Director', 'BassSectionLeader', 'TenorSectionLeader', 'AltoSectionLeader', 'SopranoSectionLeader']
-        board_roles = ['BoardMember', 'Treasurer', 'President']
-
-        # Assign permissions based on the user's roles
-        for role in roles:
-            if role.role_type in musical_roles:
-                permissions['canEditMusicalRoles'] = True
-            if role.role_type in board_roles:
-                permissions['canEditBoardRoles'] = True
-                permissions['canViewFinancialData'] = True
-            # These permissions are universal for all role-holders
-            permissions['canAddMembers'] = True
-            permissions['canChangeActiveStatus'] = True
-            permissions['isAttendanceManager'] = True
-
-         # Generate JWT token with Eastern Time expiration
-        eastern = timezone('US/Eastern')  # Define Eastern Timezone
-        token = jwt.encode({
-            'user_id': user.user_id,
-            'member_id': member.member_id,
-            **permissions,
-            'exp': datetime.now(eastern) + timedelta(hours=24)  # Eastern Time expiration
-        }, SECRET_KEY, algorithm='HS256')
-
-        return jsonify({"message": "Login successful", "token": token}), 200
-
-    except Exception as e:
-        app.logger.error(f"Error in login endpoint: {str(e)}")
-        return jsonify({"error": "An error occurred during login"}), 500
-"""
-"""
     Retrieve and construct user permissions dynamically based on roles using a provided JWT.
-
 """
 #Permission endpoint
 @app.route('/permissions', methods=['POST'])
