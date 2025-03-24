@@ -46,50 +46,6 @@ function manageMembers() {
         }
     };
     
-    const fetchPermissionsOld = async () => {
-        try {
-            const token = sessionStorage.getItem("token");
-            if (token && token !== "" && token !== undefined) {
-
-                const decoded = jwtDecode(token)
-                console.log(decoded);
-    
-                //token to backend (contains member_id)
-                const permissionsResponse = await fetch("http://localhost:8080/permissions", {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': token
-                    }
-                })
-                
-                if (!permissionsResponse.ok) {
-                    console.log("Error getting user permissions")
-    
-                    //give user all False permissions
-                    return;
-                }
-    
-                const data = await permissionsResponse.json()
-                const permissions = data.permissions
-                console.log("PERMISSIONS SET :", permissions)
-
-                setPermissions({
-                    canEditMusicalRoles: permissions.canEditMusicalRoles || false,
-                    canEditBoardRoles: permissions.canEditBoardRoles || false,
-                    canAddMembers: permissions.canAddMembers || false,
-                });
-                
-            }
-            else {
-                //user not logged in, send to login screen
-                router.push('/login');
-            }
-        }
-        catch (Error) {
-            console.error("Error retrieving permissions :", Error)
-        };
-    }
-    
     const fetchAndSetPermissions = async () => {
         const token = sessionStorage.getItem("token");
         if (token && token !== "" && token !== undefined) {

@@ -13,7 +13,7 @@ export const fetchPermissions = async (token, router) => {
             console.log("Decoded token:", decoded);
 
             const permissionsResponse = await fetch("http://localhost:8080/permissions", {
-                method: 'POST',
+                method: 'GET',
                 headers: {
                     Authorization: token,
                 },
