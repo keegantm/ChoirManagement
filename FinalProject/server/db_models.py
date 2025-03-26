@@ -2,7 +2,9 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from pytz import timezone
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_restx import Api
 
+api = Api()
 db = SQLAlchemy()
 
 # Define a database model class for the 'Member' table

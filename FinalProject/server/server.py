@@ -12,9 +12,36 @@ import os
 from dotenv import load_dotenv
 #from db_models import db
 from db_models import *
+from flask_restx import Resource, Namespace
+from input_models import test_post_model, credentials_input_model
+
+#NOTE: Beware an error I ran into with return jsonify(role_assignments), 200
+'''
+jsonify(role_assignments), 200 is causing an issue because jsonify() already creates a Response object.
+
+By returning jsonify(role_assignments), 200, Flask tries to double-wrap it, leading to:
+TypeError: Object of type Response is not JSON serializable
+
+need to change each response code :/
+
+Also, errors should be in format like
+return {"error": "An error occurred in MembersList"}, 500
+'''
 
 #initialize Flask app
 app = Flask(__name__)
+
+#configuring the SQLAlchemy Database URI 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/ChoirDatabase'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+api.init_app(app)
+db.init_app(app)
+
+#create database models
+with app.app_context():
+    db.create_all()
+
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 #load environment variables from a .env file
@@ -23,20 +50,25 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY is not set in the environment")
 
-#configuring the SQLAlchemy Database URI 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/ChoirDatabase'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-#initialize the database
-db.init_app(app)
-
-#create database models
-with app.app_context():
-    db.create_all()
-
 x = datetime.now()
 
+ns = Namespace("api")
 
+@ns.route("/testGet")
+class Hello(Resource):
+    def get(self):
+        return {"hello" : "restx"}, 200
+    
+@ns.route("/testPost/<int:id>")
+@ns.expect(test_post_model)
+class Hello(Resource):
+    def post(self, id):
+        print("Received ID:", id)
+        data = request.get_json()  # Get JSON payload
+        print("Received Data:", data)
+        print(ns.payload)
+        return {"success": "sure"}, 200
+    
 """
 Permissions
     - Retrieve and construct user permissions dynamically based on roles
@@ -137,6 +169,48 @@ def register():
         return jsonify({"error": "An error occurred during registration"}), 500
 
 """
+Register
+    - Register a new user after verifying their email exists in the Member table.
+"""
+@ns.route("/register")
+@ns.expect(credentials_input_model)
+class Register(Resource):
+    def post(self):
+        try:
+            data = request.get_json()
+
+            username = data.get('username')
+            password = data.get('password')
+
+            #input validation
+            if not username or not password:
+                return {"error": "Username and password are required"}, 400
+
+            #check if the username exists in the Members table
+            member = Member.query.filter_by(email=username).first()
+            if not member:  # If the email does not exist in the Member table, return an error
+                return {"error": "Your email was not verified"}, 400
+
+            #check if the user already exists in the User table
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user:  # If the email already exists in the User table, return an error
+                return {"error": "User already exists"}, 400
+
+            #create a new user
+            new_user = User(
+                username=username,  # Use the email as the username 
+                password=password  # Hash the password securely CHANGED: now the User constructor hashes the password
+            )
+            db.session.add(new_user)  # Add the new user to the database session
+            db.session.commit()  # Commit the transaction
+
+            return {"message": "User registered successfully"}, 201
+
+        except Exception as e:  #handle unexpected exceptions
+            app.logger.error(f"Error in register endpoint: {str(e)}")  # Log the error for debugging
+            return {"error": "An error occurred during registration"}, 500
+
+"""
 Login
 - Authenticate the user and generate a JWT token with basic user information.
 """
@@ -176,13 +250,64 @@ def login():
         app.logger.error(f"Error in login endpoint: {str(e)}")
         return jsonify({"error": "An error occurred during login"}), 500
 
+"""
+Login
+- Authenticate the user and generate a JWT token with basic user information.
+"""
+@ns.route("/login")
+@ns.expect(credentials_input_model)
+class Login(Resource):
+    def post(self):
+        try:
+            data = request.get_json()
+            username = data.get('username')
+            password = data.get('password')
+
+            #input validation
+            if not username or not password:
+                return {"error": "Username and password are required"}, 400
+
+            #find user in the database
+            user = User.query.filter_by(username=username).first()
+            if not user or not user.verify_password(password):
+                return {"error": "Invalid username or password"}, 401
+
+            #fetch the corresponding member row from the Member table
+            member = Member.query.filter_by(email=username).first()
+            if not member:
+                return {"error": "No associated member found in the Member table"}, 404
+
+            #fenerate JWT token
+            eastern = timezone('US/Eastern')  # Define Eastern Timezone
+            token = jwt.encode({
+                'user_id': user.user_id,
+                'member_id': member.member_id,
+                'exp': datetime.now(eastern) + timedelta(hours=24)  # Eastern Time expiration
+            }, SECRET_KEY, algorithm='HS256')
+
+            return jsonify({"message": "Login successful", "token": token})
+
+        except Exception as e:
+            app.logger.error(f"Error in login endpoint: {str(e)}")
+            return {"error": "An error occurred during login"}, 500
+
 '''
 Home Page, 
     - Just tests connection to backend
 '''
-@app.route('/', methods=['GET'])
-def return_home():
-    return jsonify({'message': 'Welcome to the Choir Home Page!'}), 200 # Return a welcome message for the home page
+#@app.route('/', methods=['GET'])
+#def return_home():
+#    return jsonify({'message': 'Welcome to the Choir Home Page!'}), 200 # Return a welcome message for the home page
+
+"""
+Home Page, 
+    - Just tests connection to backend
+"""
+@ns.route("/home")
+class Home(Resource):
+    def get(self):
+        return jsonify({'message': 'Welcome to the Choir Home Page!'})
+
 
 '''
 Get all currently active members
@@ -208,7 +333,34 @@ def getActiveMembers():
     except Exception as e:
         print(f"Error in get active members endpoint: {str(e)}")
         app.logger.error(f"Error in get active members endpoint: {str(e)}")
-        return jsonify({"error": "An error occurred in getting active members"}), 500
+        return jsonify({"error": "An error occurred in getting active members"})
+
+'''
+Get all currently active members
+
+'''
+@ns.route("/MembersList")
+class MembersList(Resource):
+    def get(self):
+        try:
+            #print("GETTING ACTIVE MEMBERS")
+            #querying the users table
+            result = db.session.execute(text('SELECT member_id, first_name, last_name FROM Member WHERE is_active = True')).fetchall()
+            members = [{'member_id': row[0], 'first_name': row[1], 'last_name' : row[2]} for row in result]
+        
+
+            #if no results found
+            if not members:
+                print("ERROR, didnt find any active members")
+                return '<h1>No data found.</h1>'
+
+            #return the result as JSON
+            return jsonify(members)
+        except Exception as e:
+            print(f"Error in MembersList: {str(e)}")
+            app.logger.error(f"Error in MembersList: {str(e)}")
+            return {"error": "An error occurred in MembersList"}, 500
+
 
 '''
 Generalized getter for role assignments, with an input list of roles
@@ -264,6 +416,68 @@ def getRoleAssignmentsByType():
         print(f"Error in getRoleAssignmentsByType endpoint: {str(e)}")
         app.logger.error(f"Error in getRoleAssignmentsByType endpoint: {str(e)}")
         return jsonify({"error": "An error occurred in getRoleAssignmentsByType"}), 500
+
+''' TODO: Requires updating the frontend caller, in RoleManager.js. 
+It is currently sending a json with roleOptions: list of options.
+But it instead needs to construct the URI
+AND need to change Post->Get
+
+Generalized getter for role assignments, with an input list of roles
+
+NOTE: No longer accurate
+Will receive a list of types that are valid : 
+Options:
+    roleOptions =[
+        'BoardMember', 
+        'Treasurer', 
+        'President'
+        'Accompanist', 
+        'Director', 
+        'BassSectionLeader', 
+        'TenorSectionLeader', 
+        'AltoSectionLeader', 
+        'SopranoSectionLeader']
+
+'''
+@ns.route("/RoleList/<string:roles>")
+class RoleList(Resource):
+    def get(self, roles=""):
+        try:
+            #print("GETTING ROLE ASSIGNMENTS OF TYPE:")
+            #print(request)
+            role_options = roles.strip().split(",")
+            #print(role_options)
+
+            query = text('''
+                SELECT Role.role_id, Role.role_type, Role.member_id, Member.first_name, Member.last_name
+                FROM Role
+                INNER JOIN Member ON Role.member_id = Member.member_id
+                WHERE Role.role_type IN :role_types
+            ''')
+
+            result = db.session.execute(query, {'role_types': tuple(role_options)}).fetchall()
+            
+            #convert the result to a list of dictionaries
+            role_assignments = [
+                {
+                    "role_id": row.role_id,
+                    "role_type": row.role_type,
+                    "member_id": row.member_id,
+                    "first_name": row.first_name,
+                    "last_name": row.last_name
+                }
+                for row in result
+            ]
+            
+            print(role_assignments)
+
+            #return the data as JSON
+            return jsonify(role_assignments)
+        except Exception as e:
+            print(f"Error in RoleList endpoint: {str(e)}")
+            app.logger.error(f"Error in RoleList endpoint: {str(e)}")
+            return {"error": "An error occurred in RoleList"}, 500
+
 
 ''' TODO: Patch probably makes more sense
 Update Existing Role
@@ -789,6 +1003,7 @@ def setBudget():
         app.logger.error(f"Error: {str(e)}")
         return jsonify({"error": "Internal server error. Please try again later."}), 500
 
+api.add_namespace(ns)
 
 # Run the app
 if __name__ == '__main__':
