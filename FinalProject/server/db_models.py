@@ -2,10 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from pytz import timezone
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_restx import Api
-
-api = Api()
-db = SQLAlchemy()
+#from flask_restx import Api
+from extensions import db
 
 # Define a database model class for the 'Member' table
 class Member(db.Model):
@@ -76,7 +74,7 @@ class Role(db.Model):
     role_end_date = db.Column(db.Date)
 
 # Define a database model class for the 'Attendance' table
-class Attendance(db.Model):
+class PracticeAttendance(db.Model):
     __tablename__ = 'PracticeAttendance'
     practice_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     member_id = db.Column(db.Integer, db.ForeignKey('Member.member_id'), nullable=False)

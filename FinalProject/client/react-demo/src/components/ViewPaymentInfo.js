@@ -12,7 +12,7 @@ const ViewPaymentInfo = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const budgetResponse = await fetch('http://localhost:8080/getCurrentBudget');
+                const budgetResponse = await fetch('http://localhost:8080/api/Budget');
 
                 if (!budgetResponse.ok) {
                     throw new Error('Failed to fetch current budget');
@@ -26,16 +26,16 @@ const ViewPaymentInfo = () => {
                 const curr_date = new Date().toISOString().split('T')[0]
 
 
-                const getPaymentSummary = await fetch('http://localhost:8080/getPayments', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(
-                        {'date_1' : budget_date,
-                         'date_2' : curr_date
-                        }
-                    )
+                const getPaymentSummary = await fetch(`http://localhost:8080/api/Payments/${budget_date}/${curr_date}`, {
+                    method: 'GET'
+                    // headers: {
+                    //     'Content-Type': 'application/json'
+                    // },
+                    // body: JSON.stringify(
+                    //     {'date_1' : budget_date,
+                    //      'date_2' : curr_date
+                    //     }
+                    // )
                 });
                 if (!getPaymentSummary.ok) {
                     throw new Error('Failed to fetch payment info');

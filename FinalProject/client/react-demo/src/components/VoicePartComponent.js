@@ -23,7 +23,9 @@ const VoicePartComponent = (props) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const voiceResponse = await fetch('http://localhost:8080/getActiveVoiceParts')
+                const voiceResponse = await fetch('http://localhost:8080/api/VoiceParts', 
+                    {method: 'GET'}
+                )
 
                 if (!voiceResponse.ok) {
                     console.log(voiceResponse)
@@ -59,12 +61,12 @@ const VoicePartComponent = (props) => {
         const fetchData = async () => {
             try{
 
-                const handleVoicePartChangeResponse = await fetch('http://localhost:8080/updateExistingVoicePart', {
-                    method: 'POST',
+                const handleVoicePartChangeResponse = await fetch(`http://localhost:8080/api/VoiceParts/${id}`, {
+                    method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ voice_part_id: id, voice_part: newVoicePart})
+                    body: JSON.stringify({ voice_part: newVoicePart})
                 })
 
                 if (!handleVoicePartChangeResponse.ok) {
@@ -94,12 +96,12 @@ const VoicePartComponent = (props) => {
     const handleDeleteVoicePart = async (partId) => {
 
         try{
-            const handleDeleted = await fetch('http://localhost:8080/deleteVoicePart', { 
+            const handleDeleted = await fetch(`http://localhost:8080/api/VoiceParts/${partId}`, { 
                 method: 'DELETE', 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ voice_part_id: partId })
+                // headers: {
+                //     'Content-Type': 'application/json'
+                // },
+                // body: JSON.stringify({ voice_part_id: partId })
             })
 
             if (!handleDeleted.ok) {
@@ -121,7 +123,7 @@ const VoicePartComponent = (props) => {
     const handleAddVoicePart = async (memberId, newVoicePart) => {
         try{
 
-            const handleAddVoicePart = await fetch('http://localhost:8080/addVoicePart', {
+            const handleAddVoicePart = await fetch('http://localhost:8080/api/VoiceParts', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -137,7 +139,7 @@ const VoicePartComponent = (props) => {
             const result = await handleAddVoicePart.json();
             console.log(result)
 
-            const voiceResponse = await fetch('http://localhost:8080/getActiveVoiceParts')
+            const voiceResponse = await fetch('http://localhost:8080/api/VoiceParts', {method : 'GET'})
 
             if (!voiceResponse.ok) {
                 throw new Error('Failed to fetch voice assignments');

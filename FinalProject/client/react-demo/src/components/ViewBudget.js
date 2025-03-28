@@ -9,7 +9,7 @@ const ViewBudget = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const budgetResponse = await fetch('http://localhost:8080/getCurrentBudget');
+                const budgetResponse = await fetch('http://localhost:8080/api/Budget');
 
                 if (!budgetResponse.ok) {
                     throw new Error('Failed to fetch current budget');
@@ -28,7 +28,7 @@ const ViewBudget = () => {
 
         <div className='component'>
             <h2>Current Budget :</h2>
-            <p2>The most recent budget is ${displayedBudget.budget_amount}, set on {displayedBudget.budget_date_set}</p2>
+            <p>The most recent budget is ${displayedBudget.budget_amount}, set on {displayedBudget.budget_date_set}</p>
         </div>
     )
 }

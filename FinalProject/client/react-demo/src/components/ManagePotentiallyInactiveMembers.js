@@ -42,12 +42,12 @@ const ManagePotentiallyInactiveMembers = (props) => {
     const handleSetInactive = async (member_id) => {
         try {
             //change member to be inactive
-            const setInactive = await fetch('http://localhost:8080/setInactiveMember', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({member_id:member_id})
+            const setInactive = await fetch(`http://localhost:8080/api/SetInactive/${member_id}`, {
+                method: 'PATCH'
+                // headers: {
+                //     'Content-Type': 'application/json'
+                // },
+                // body: JSON.stringify({member_id:member_id})
             });
 
             if (!setInactive.ok) {

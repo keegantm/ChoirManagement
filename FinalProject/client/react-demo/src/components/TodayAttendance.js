@@ -78,7 +78,7 @@ const TodayAttendance = (props) => {
             //to help handle multiple records being input for the same practice
             const responses = await Promise.all(
                 processed_attendance.map((member) =>
-                    fetch('http://localhost:8080/addAttendance', {
+                    fetch('http://localhost:8080/api/Attendance', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

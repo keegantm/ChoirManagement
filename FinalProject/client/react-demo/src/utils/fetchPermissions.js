@@ -12,7 +12,7 @@ export const fetchPermissions = async (token, router) => {
             const decoded = jwtDecode(token);
             console.log("Decoded token:", decoded);
 
-            const permissionsResponse = await fetch("http://localhost:8080/permissions", {
+            const permissionsResponse = await fetch("http://localhost:8080/api/permissions", {
                 method: 'GET',
                 headers: {
                     Authorization: token,

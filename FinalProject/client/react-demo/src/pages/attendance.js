@@ -31,7 +31,7 @@ function attendance( ) {
     //retrieve all active choir members
     const fetchActiveMembers = async () => {
         try {
-            const memberResponse = await fetch('http://localhost:8080/getActiveMembers')
+            const memberResponse = await fetch('http://localhost:8080/api/MembersList')
 
             if (!memberResponse.ok) {
                 throw Error("Error getting 'ok' response");
@@ -49,7 +49,7 @@ function attendance( ) {
     //retrieve all potentially inactive members, (members who missed all 5 of the most recent practices)
     const fetchPInactiveMembers = async () => {
         try {
-            const membersResponse = await fetch('http://localhost:8080/retrievePotentiallyInactiveMembers');
+            const membersResponse = await fetch('http://localhost:8080/api/InactiveMembers');
 
             if (!membersResponse.ok) {
                 console.log(membersResponse.json())
@@ -104,7 +104,7 @@ function attendance( ) {
             })
         */
 
-        fetch('http://localhost:8080/getAbsenceReasons')
+        fetch('http://localhost:8080/api/AbsenceReasons')
             .then(response => response.json())
             .then(data => { console.log(data)
                             setAbsenceReasons(data)

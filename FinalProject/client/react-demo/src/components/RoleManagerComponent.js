@@ -21,12 +21,14 @@ const RoleManagerComponent = (props) => {
             try {
                 // Fetch role assignments based on roleOptions
                 if (roleOptions && roleOptions.length > 0) {
-                    const roleResponse = await fetch('http://localhost:8080/getRoleAssignmentsByType', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ role_types: roleOptions }) // Pass role options as the filter
+                    let rolesStr = roleOptions.join(",")
+
+                    const roleResponse = await fetch(`http://localhost:8080/api/RoleList/${rolesStr}`, {
+                        method: 'GET',
+                        // headers: {
+                        //     'Content-Type': 'application/json'
+                        // },
+                        //body: JSON.stringify({ role_types: roleOptions }) // Pass role options as the filter
                     });
     
                     if (!roleResponse.ok) {
@@ -62,12 +64,12 @@ const RoleManagerComponent = (props) => {
     const handleRoleChange = async (roleId, newRoleType) => {
         try{
 
-            const handleRoleChangeResponse = await fetch('http://localhost:8080/updateExistingRole', {
-                method: 'POST',
+            const handleRoleChangeResponse = await fetch(`http://localhost:8080/api/RoleChange/${roleId}`, {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ role_id: roleId, role_type: newRoleType})
+                body: JSON.stringify({ role_type: newRoleType})
             })
 
             if (!handleRoleChangeResponse.ok) {
@@ -95,12 +97,12 @@ const RoleManagerComponent = (props) => {
     const handleDeleteRole = async (roleId) => {
 
         try{
-            const handleDeleted = await fetch('http://localhost:8080/deleteRoleRow', { 
+            const handleDeleted = await fetch(`http://localhost:8080/api/RoleChange/${roleId}`, { 
                 method: 'DELETE', 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ role_id: roleId })
+                // headers: {
+                //     'Content-Type': 'application/json'
+                // },
+                //body: JSON.stringify({ role_id: roleId })
             })
 
             if (!handleDeleted.ok) {
@@ -126,12 +128,12 @@ const RoleManagerComponent = (props) => {
             let formattedDate = current_date.toISOString().split('T')[0]
             console.log(formattedDate)
 
-            const handleAddRole = await fetch('http://localhost:8080/assignNewRole', {
+            const handleAddRole = await fetch(`http://localhost:8080/api/RoleAdd/${memberId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ member_id: memberId, role_type: newRoleType, role_start_date: formattedDate })
+                body: JSON.stringify({ role_type: newRoleType, role_start_date: formattedDate })
             })
 
             if (!handleAddRole.ok) {

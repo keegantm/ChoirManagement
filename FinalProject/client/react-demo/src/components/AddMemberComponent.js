@@ -51,7 +51,7 @@ const AddMemberComponent = ({onNewMember}) => {
     
     const handleSubmit = async () => {
         try {
-            const response = await fetch('http://localhost:8080/addMember', {
+            const response = await fetch('http://localhost:8080/api/AddMember', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

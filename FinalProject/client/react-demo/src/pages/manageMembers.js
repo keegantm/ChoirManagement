@@ -33,7 +33,7 @@ function manageMembers() {
     
     const fetchActiveMembers = async () => {
         try {
-            const memberResponse = await fetch('http://localhost:8080/getActiveMembers');
+            const memberResponse = await fetch('http://localhost:8080/api/MembersList');
             if (!memberResponse.ok) {
                 throw new Error('Failed to fetch active members');
             }
